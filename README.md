@@ -14,6 +14,7 @@ A fully interactive, terminal-style developer portfolio built with React, TypeSc
 - **Command-driven UI** — navigate the portfolio entirely through typed commands
 - **Inline ghost-text autocomplete** — first matching suggestion appears as you type; accept it with `Tab` or double-tap
 - **Command history** — navigate previous commands with `↑` / `↓`
+- **Visual effects** — ambient canvas animations (e.g. `fun fireflies`); each effect has a status (`done` / `planning`) so only ready effects can be activated
 - **Three themes** — `dark` (default), `light`, and `ubuntu` — switch live with `theme <name>`
 - **Mobile-friendly** — touch-optimised keyboard UX, commands panel auto-collapses on focus
 - **Responsive layout** — works from small to widescreen
@@ -32,7 +33,9 @@ A fully interactive, terminal-style developer portfolio built with React, TypeSc
 | `contact` | Email, phone, GitHub, LinkedIn |
 | `blog` | Links to blog platforms |
 | `theme` | List available themes |
-| `fun` | List available visual effects |
+| `fun` | List visual effects |
+| `fun <effect>` | Activate a visual effect (e.g. `fun fireflies`) |
+| `fun <effect> clear` | Clear an active effect |
 | `help` | Show all commands |
 | `clear` | Clear terminal output |
 | `history` | Show command history |
@@ -67,7 +70,8 @@ src/
 │   ├── TerminalHeader.tsx  # Title bar + close button
 │   ├── TerminalOutput.tsx  # Renders command history
 │   ├── WelcomeScreen.tsx   # Clickable command grid (collapsible)
-│   └── CommandLine.tsx     # Input, inline ghost-text autocomplete, history nav
+│   ├── CommandLine.tsx     # Input, inline ghost-text autocomplete, history nav
+│   └── FirefliesCanvas.tsx # Canvas-based firefly ambient animation
 │
 ├── hooks/
 │   └── useCommandExecutor.tsx  # Thin dispatcher — routes input to command renderers
@@ -142,6 +146,13 @@ Place your resume PDF in the `public/` folder and update `resume.filePath` accor
 1. Create or update a renderer function in `src/commands/`
 2. Add a `case` for it in the `switch` block in `src/hooks/useCommandExecutor.tsx`
 3. Optionally add it to `portfolioData.commands` in `data.ts` to surface it in the help/welcome screen
+
+### Adding a new visual effect
+
+1. Create a canvas component in `src/components/` (see `FirefliesCanvas.tsx` as a reference)
+2. Add a new entry to `AVAILABLE_EFFECTS` in `src/data/data.ts` with `status: "done"`
+3. Add a conditional render in `Terminal.tsx` for the new effect name
+4. Set `status: "planning"` while in development — the UI will show it as "under development" and prevent activation
 
 ---
 

@@ -1,3 +1,12 @@
+/**
+ * Ambient firefly animation rendered as a fixed full-screen canvas overlay.
+ * Visuals (color, size, speed, pulse) are ported from the standalone Fireflies project.
+ *
+ * Lifecycle: fireflies spawn at the bottom, drift upward, and leave permanently.
+ * Once all have exited, `onComplete` is called so Terminal can unmount this component.
+ *
+ * The canvas uses `pointer-events: none` so the terminal remains fully interactive.
+ */
 import { useEffect, useRef, useCallback } from "react";
 
 // ── Firefly constants (ported from Fireflies repo defaults) ──────────────
@@ -39,13 +48,14 @@ function getScreenCount() {
     return Math.floor(BASE_COUNT * mult);
 }
 
+/** Spawn a single firefly at a random x along the bottom edge. */
 function createFirefly(canvasW: number, canvasH: number): Firefly {
     return {
         x: Math.random() * canvasW,
-        y: canvasH, // spawn at bottom
+        y: canvasH,
         r: Math.random() * (SIZE_MAX - SIZE_MIN) + SIZE_MIN,
         dx: Math.random() * (DRIFT_RANGE_X[1] - DRIFT_RANGE_X[0]) + DRIFT_RANGE_X[0],
-        dy: -(Math.random() * 0.8 + 0.2), // always upward: -0.2 to -1.0
+        dy: -(Math.random() * 0.8 + 0.2), // always upward
         alpha: Math.random() * (MAX_ALPHA - MIN_ALPHA) + MIN_ALPHA,
         pulseDir: Math.random() > 0.5 ? 1 : -1,
     };
@@ -55,11 +65,19 @@ interface FirefliesCanvasProps {
     onComplete: () => void;
 }
 
+// Hoisted static style — avoids re-creation on every render (rendering-hoist-jsx)
+const CANVAS_STYLE: React.CSSProperties = {
+    position: "fixed",
+    inset: 0,
+    zIndex: 50,
+    pointerEvents: "none",
+};
+
 export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const firefliesRef = useRef<Firefly[]>([]);
+    const firefliesRef = useRef<Firefly[]>([]);   // mutable array — mutated in-place during animation
     const animFrameRef = useRef<number>(0);
-    const onCompleteRef = useRef(onComplete);
+    const onCompleteRef = useRef(onComplete);      // ref so animate() never goes stale
     onCompleteRef.current = onComplete;
 
     const animate = useCallback(() => {
@@ -77,6 +95,7 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
 
         const flies = firefliesRef.current;
 
+        // Iterate in reverse so splice() doesn't skip elements
         for (let i = flies.length - 1; i >= 0; i--) {
             const f = flies[i];
 
@@ -108,6 +127,7 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
         // Reset shadow so it doesn't bleed into clearRect next frame
         ctx.shadowBlur = 0;
 
+        // All fireflies have left — signal Terminal to unmount this canvas
         if (flies.length === 0) {
             onCompleteRef.current();
             return;
@@ -148,12 +168,7 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
     return (
         <canvas
             ref={canvasRef}
-            style={{
-                position: "fixed",
-                inset: 0,
-                zIndex: 50,
-                pointerEvents: "none",
-            }}
+            style={CANVAS_STYLE}
         />
     );
 }

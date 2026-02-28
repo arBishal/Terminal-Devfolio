@@ -21,6 +21,7 @@ A beginner-friendly walkthrough of every layer of the codebase: what each file d
 13. [Types](#13-types)
 14. [How a Command Flows End-to-End](#14-how-a-command-flows-end-to-end)
 15. [How Mobile UX Works](#15-how-mobile-ux-works)
+16. [Visual Effects System](#16-visual-effects-system)
 
 ---
 
@@ -121,6 +122,7 @@ App
 └── Terminal                  ← manages layout, theme state, focus logic
     ├── TerminalHeader         ← title bar + close button
     ├── WelcomeScreen          ← clickable command grid (collapsible)
+    ├── FirefliesCanvas?       ← ambient canvas animation (conditional)
     └── [scrollable pane]
         ├── TerminalOutput     ← renders command history
         └── CommandLine        ← input + ghost autocomplete + ▊ cursor
@@ -148,9 +150,13 @@ const {
   historyIndex,      // which history entry ↑/↓ is pointing at
   setHistoryIndex,
   currentThemeName,  // "dark" | "light" | "ubuntu"
+  currentEffect,     // "fireflies" | null
+  clearEffect,       // removes active effect
   executeCommand,    // function to call when user presses Enter
 } = useCommandExecutor({ setIsCommandsOpen });
 ```
+
+When `currentEffect` is non-null, `Terminal` conditionally renders the matching canvas component (e.g. `FirefliesCanvas`). The canvas uses `pointer-events: none` so the terminal stays fully interactive underneath.
 
 `useCommandExecutor` is a **custom React hook** — think of it as a self-contained logic box that returns values and functions to the component.
 
@@ -331,6 +337,24 @@ const [historyIndex, setHistoryIndex] = useState(-1);
 const [currentThemeName, setCurrentThemeName] = useState<ThemeName>("dark");
 const [currentEffect, setCurrentEffect] = useState<string | null>(null);
 ```
+
+### Stable callbacks via refs
+
+`executeCommand` reads `currentEffect` and `currentThemeName` to decide what to display. Normally this would require them as `useCallback` dependencies, causing the function to be re-created on every state change. Instead, refs mirror the state:
+
+```tsx
+const currentEffectRef = useRef(currentEffect);
+currentEffectRef.current = currentEffect;
+const currentThemeNameRef = useRef(currentThemeName);
+currentThemeNameRef.current = currentThemeName;
+
+const executeCommand = useCallback((cmd: string) => {
+  // reads currentEffectRef.current instead of currentEffect
+  // → no dependency needed → stable function identity
+}, []);
+```
+
+This is the [Vercel `rerender-functional-setstate` best practice](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) — stable callback references prevent unnecessary re-renders of child components.
 
 ### The `push` helper
 
@@ -565,3 +589,63 @@ if (togglePressedRef.current) {
 ```
 
 `pointerdown` fires before `blur`, so by the time blur runs, the flag is already set.
+
+---
+
+## 16. Visual Effects System
+
+The `fun` command lets users activate ambient visual effects that overlay the terminal.
+
+### Architecture
+
+```
+data.ts                    ← AVAILABLE_EFFECTS: EffectInfo[] (name + status)
+    ↓
+useCommandExecutor         ← validates effect name & status, sets currentEffect
+    ↓
+Terminal.tsx               ← conditionally renders canvas component
+    ↓
+FirefliesCanvas.tsx        ← Canvas API animation (pointer-events: none)
+```
+
+### Effect status gating
+
+Each effect has a `status` field (`"done"` | `"planning"`):
+
+```ts
+export const AVAILABLE_EFFECTS: EffectInfo[] = [
+  { name: "fireflies", status: "done" },
+  { name: "rain", status: "planning" },
+];
+```
+
+- **`done`** — effect can be activated via click or command
+- **`planning`** — shown in the list as "under development"; clicking or typing shows a message instead of activating
+
+### Command flow
+
+| Command | Behaviour |
+|---|---|
+| `fun` | Lists all effects with their status |
+| `fun fireflies` | Activates the effect (spawns canvas overlay) |
+| `fun fireflies` (already active) | Shows "already active" message with clear hint |
+| `fun fireflies clear` | Immediately removes the effect |
+| `fun rain` | Shows "under development" (status is `planning`) |
+
+### FirefliesCanvas.tsx
+
+A self-contained React component that renders fireflies using the Canvas API:
+
+- **Spawn**: ~80 fireflies at the bottom of the screen (adjusted for mobile)
+- **Movement**: drift upward with random horizontal sway
+- **Visuals**: yellow-green (`#ddff11`), 2–6px, pulsing alpha, glow via `shadowBlur`
+- **Lifecycle**: fireflies leave the screen permanently; once all are gone, `onComplete` is called and the canvas unmounts
+- **Non-blocking**: `pointer-events: none` on the canvas ensures the terminal remains fully interactive
+
+Constants (colour, size, speed, pulse rate) are ported directly from the [Fireflies](https://github.com/arBishal/Fireflies) project.
+
+### Adding a new effect
+
+1. Create a canvas component (e.g. `RainCanvas.tsx`) — call `onComplete` when the animation ends
+2. Add `{ name: "rain", status: "done" }` to `AVAILABLE_EFFECTS` in `data.ts`
+3. Add a conditional render in `Terminal.tsx`: `{currentEffect === "rain" && <RainCanvas onComplete={clearEffect} />}`

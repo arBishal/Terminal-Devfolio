@@ -4,6 +4,11 @@ interface TerminalOutputProps {
   history: OutputLine[];
 }
 
+/**
+ * Renders the terminal's scrollback — each entry is a command echo,
+ * result block, or error message. Command entries are marked with
+ * `data-cmd` so Terminal.tsx can querySelector them for scroll targeting.
+ */
 export function TerminalOutput({ history }: TerminalOutputProps) {
   if (history.length === 0) return null;
 
@@ -24,7 +29,8 @@ export function TerminalOutput({ history }: TerminalOutputProps) {
             <div className="theme-error pl-0">{line.content}</div>
           )}
         </div>
-      ))}
-    </div>
+      ))
+      }
+    </div >
   );
 }
