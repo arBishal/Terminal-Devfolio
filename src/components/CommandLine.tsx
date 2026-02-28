@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { portfolioData } from "../data/data";
+import { COMMANDS } from "@/data/staticData";
 
 interface CommandLineProps {
   onExecute: (command: string) => void;
@@ -13,7 +13,7 @@ interface CommandLineProps {
 // Used for autocomplete so every valid command is discoverable via Tab.
 const AVAILABLE_COMMANDS = [
   // Public (shown in help / welcome screen)
-  ...portfolioData.commands.map((c) => c.name),
+  ...COMMANDS.map((c) => c.name),
   // Hidden
   "hide", "show",
   // Easter eggs / unix-style

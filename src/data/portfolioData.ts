@@ -1,3 +1,4 @@
+
 // ============================================================
 // Portfolio Data
 // ============================================================
@@ -39,10 +40,7 @@ export interface Skills {
   practices: string[];
 }
 
-export interface CommandInfo {
-  name: string;
-  description: string;
-}
+
 
 export interface Personal {
   fullName: string;
@@ -52,7 +50,6 @@ export interface Personal {
   location: string;
   education: string[];
   bio: string[];
-  asciiArt: string;
   portfolioVersion: string;
 }
 
@@ -80,7 +77,7 @@ export interface PortfolioData {
   experience: Experience[];
   contact: Contact;
   blog: Blog;
-  commands: CommandInfo[];
+
 }
 
 export const portfolioData: PortfolioData = {
@@ -102,12 +99,6 @@ export const portfolioData: PortfolioData = {
       "Currently, at Dynamic Solution Innovators Ltd., supporting the digital operations of 190+ financial institutions, including credit unions and banks, impacting over 85+ million end users.",
       "Engineering digital solutions for millions by day; chasing ideas through code, visuals, and words by night. Has a strong affinity for building fun, visually striking products that feel as good as they look. Always creating. Always telling stories.",
     ],
-    asciiArt: `
- ____  _     _           _
-| __ )(_)___| |__   __ _| |
-|  _ \\| / __| '_ \\ / _\` | |
-| |_) | \\__ \\ | | | (_| | |
-|____/|_|___/_| |_|\\__,_|_|`,
     portfolioVersion: "v1.0.0",
   },
 
@@ -231,33 +222,4 @@ export const portfolioData: PortfolioData = {
     ],
   },
 
-  // ----------------------------------------------------------
-  // Commands (shown in help and welcome screen)
-  // ----------------------------------------------------------
-  commands: [
-    { name: "about", description: "Learn about me" },
-    { name: "skills", description: "View my technical skills" },
-    { name: "experience", description: "View work experience" },
-    { name: "projects", description: "Browse my projects" },
-    { name: "resume", description: "Download my resume" },
-    { name: "contact", description: "Get contact information" },
-    { name: "blog", description: "Read my articles" },
-    { name: "theme", description: "Change terminal theme" },
-    { name: "fun", description: "Visual effects" },
-    { name: "help", description: "Show this help message" },
-    { name: "clear", description: "Clear terminal" },
-  ],
 };
-
-// ----------------------------------------------------------
-// Available Visual Effects
-// ----------------------------------------------------------
-export interface EffectInfo {
-  name: string;
-  status?: "done" | "planning";
-}
-
-export const AVAILABLE_EFFECTS: EffectInfo[] = [
-  { name: "fireflies", status: "done" },
-  { name: "rain", status: "planning" },
-];

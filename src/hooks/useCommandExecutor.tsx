@@ -1,20 +1,20 @@
 import { useState, useCallback, useRef } from "react";
-import type { OutputLine, ThemeName } from "../types/terminal";
-import { themeNames, defaultTheme } from "../themes/themes";
-import { portfolioData } from "../data/data";
+import type { OutputLine, ThemeName } from "@/types/terminal";
+import { themeNames, defaultTheme } from "@/themes/themes";
+import { portfolioData } from "@/data/portfolioData";
 
 // Command renderers
 import {
   renderAbout, renderSkills, renderProjects, renderExperience,
   renderResume, triggerResumeDownload, renderContact, renderBlog,
 } from "../commands/portfolio";
-import { renderHelp } from "../commands/help";
-import { renderThemeList, renderFunList } from "../commands/visuals";
-import { AVAILABLE_EFFECTS } from "../data/data";
+import { renderHelp } from "@/commands/help";
+import { renderThemeList, renderFunList } from "@/commands/visuals";
+import { AVAILABLE_EFFECTS } from "@/data/staticData";
 import {
   renderLs, renderPwd, renderWhoami, renderDate, renderSudo,
   renderHack, renderExit, renderHello, renderHistory, renderCat, renderEcho,
-} from "../commands/misc";
+} from "@/commands/misc";
 
 // Hoisted regex — avoids recreation on every command execution (js-hoist-regexp)
 const WHITESPACE_RE = /\s+/;
