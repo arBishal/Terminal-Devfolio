@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { OutputLine, ThemeName } from "../types/terminal";
 import { themeNames, defaultTheme } from "../themes/themes";
 import { portfolioData } from "../data/data";
@@ -16,6 +16,9 @@ import {
   renderHack, renderExit, renderHello, renderHistory, renderCat, renderEcho,
 } from "../commands/misc";
 
+// Hoisted regex — avoids recreation on every command execution (js-hoist-regexp)
+const WHITESPACE_RE = /\s+/;
+
 export interface CommandExecutorOptions {
   setIsCommandsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -31,6 +34,13 @@ export interface CommandExecutor {
   executeCommand: (cmd: string) => void;
 }
 
+/**
+ * Central command-execution hook. Owns all terminal state (history, theme,
+ * effect) and exposes a stable `executeCommand` callback for the UI.
+ *
+ * State that the callback reads at dispatch time (currentEffect, currentThemeName)
+ * is mirrored into refs so the callback never needs to be re-created.
+ */
 export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions): CommandExecutor {
   const [history, setHistory] = useState<OutputLine[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -38,7 +48,15 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
   const [currentThemeName, setCurrentThemeName] = useState<ThemeName>(defaultTheme);
   const [currentEffect, setCurrentEffect] = useState<string | null>(null);
 
-  const executeCommand = (cmd: string) => {
+  // Refs mirror state so executeCommand can read latest values
+  // without needing them as useCallback dependencies (rerender-functional-setstate)
+  const currentEffectRef = useRef(currentEffect);
+  currentEffectRef.current = currentEffect;
+  const currentThemeNameRef = useRef(currentThemeName);
+  currentThemeNameRef.current = currentThemeName;
+
+  const executeCommand = useCallback((cmd: string) => {
+    /** Append a single output line to the terminal history. */
     function push(type: OutputLine["type"], content: OutputLine["content"]) {
       setHistory((prev) => [...prev, { type, content }]);
     }
@@ -46,6 +64,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     const trimmedCmd = cmd.trim().toLowerCase();
     if (trimmedCmd === "") return;
 
+    // Record the raw command for display + ↑/↓ navigation, then reset index
     setHistory((prev) => [
       ...prev,
       { type: "command", content: cmd },
@@ -65,14 +84,19 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       return;
     }
 
+    // ── fun <effect> [clear] ─────────────────────────────────────────────────
+    //  Three-way dispatch:
+    //    1. "fun <effect> clear"  → remove the active effect
+    //    2. "fun <effect>" (done) → activate or warn if already active
+    //    3. "fun <effect>" (else) → show under-development message
     if (trimmedCmd.startsWith("fun ")) {
-      const args = trimmedCmd.slice(4).trim().split(/\s+/);
+      const args = trimmedCmd.slice(4).trim().split(WHITESPACE_RE);
       const name = args[0];
       const subCmd = args[1];
 
       // fun <effect> clear
       if (subCmd === "clear") {
-        if (currentEffect === name) {
+        if (currentEffectRef.current === name) {
           setCurrentEffect(null);
           push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; cleared.</p>);
         } else {
@@ -84,7 +108,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       const effect = AVAILABLE_EFFECTS.find(e => e.name === name);
       if (effect) {
         if (effect.status === "done") {
-          if (currentEffect === name) {
+          if (currentEffectRef.current === name) {
             push("result", <p className="theme-muted">Effect &apos;{name}&apos; is already active. To clear it, run: <span className="theme-accent">fun {name} clear</span></p>);
           } else {
             setCurrentEffect(name);
@@ -101,7 +125,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
 
     // ── Main command dispatch ─────────────────────────────────────────────────
     switch (trimmedCmd) {
-      case "help": push("result", renderHelp(portfolioData.commands)); break;
+      case "help": push("result", renderHelp()); break;
       case "about": push("result", renderAbout()); break;
       case "skills": push("result", renderSkills()); break;
       case "projects": push("result", renderProjects()); break;
@@ -109,9 +133,9 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       case "resume": triggerResumeDownload(); push("result", renderResume()); break;
       case "contact": push("result", renderContact()); break;
       case "blog": push("result", renderBlog()); break;
-      case "theme": push("result", renderThemeList(currentThemeName, executeCommand)); break;
-      case "fun": push("result", renderFunList(currentEffect, executeCommand)); break;
-      case "clear": setHistory([]); return;
+      case "theme": push("result", renderThemeList(currentThemeNameRef.current, executeCommand)); break;
+      case "fun": push("result", renderFunList(currentEffectRef.current, executeCommand)); break;
+      case "clear": setHistory([]); return; // wipe history; return skips pushing the "clear" command itself
       case "hide": setIsCommandsOpen(false); push("result", <p className="theme-muted">Commands hidden. Type <span className="theme-accent">show</span> to bring them back.</p>); break;
       case "show": setIsCommandsOpen(true); push("result", <p className="theme-muted">Commands visible.</p>); break;
       case "ls":
@@ -134,9 +158,10 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       case "echo": push("result", renderEcho()); break;
       default: push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const clearEffect = () => setCurrentEffect(null);
+  const clearEffect = useCallback(() => setCurrentEffect(null), []);
 
   return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, clearEffect, executeCommand };
 }

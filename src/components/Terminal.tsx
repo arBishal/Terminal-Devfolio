@@ -6,6 +6,11 @@ import { WelcomeScreen } from "./WelcomeScreen";
 import { FirefliesCanvas } from "./FirefliesCanvas";
 import { useCommandExecutor } from "../hooks/useCommandExecutor";
 
+/**
+ * Root component — owns layout, theme attribute, scroll-to-latest logic,
+ * and mobile focus/collapse handling. Delegates all command logic to
+ * useCommandExecutor and renders child components for each UI region.
+ */
 export function Terminal() {
   const [isClosed, setIsClosed] = useState(false);
   const [isCommandsOpen, setIsCommandsOpen] = useState(true);
@@ -37,7 +42,7 @@ export function Terminal() {
     const pane = terminalRef.current;
     if (!pane) return;
     // Scroll the last typed command to the top of the pane so the user
-    // always reads output from its beginning, even when it overflows.
+    // reads output from its beginning. Uses [data-cmd] markers set by TerminalOutput.
     const cmds = pane.querySelectorAll("[data-cmd]");
     if (cmds.length > 0) {
       cmds[cmds.length - 1].scrollIntoView({ block: "start", behavior: "smooth" });

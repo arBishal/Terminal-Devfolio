@@ -2,6 +2,7 @@ import { themeNames } from "../themes/themes";
 import { AVAILABLE_EFFECTS } from "../data/data";
 import type { ThemeName } from "../types/terminal";
 
+/** Renders the interactive theme picker shown by the `theme` command. */
 export function renderThemeList(
     currentThemeName: ThemeName,
     executeCommand: (cmd: string) => void,
@@ -34,6 +35,11 @@ export function renderThemeList(
     );
 }
 
+/**
+ * Renders the visual effects list shown by the `fun` command.
+ * Effects with status "done" are clickable; others show as muted
+ * with an "under development" label.
+ */
 export function renderFunList(
     currentEffect: string | null,
     executeCommand: (cmd: string) => void,
