@@ -135,11 +135,18 @@ export const portfolioData: PortfolioData = {
   // ----------------------------------------------------------
   projects: [
     {
-      name: "E-Statements",
+      name: "Terminal-Devfolio",
       description:
-        "Collaborating with a cross-border engineering team to deliver scalable solutions for a leading US-based digital banking provider. Supporting the digital operations of 190+ financial institutions, including credit unions and banks, impacting over 85+ million end users.",
-      tech: ["JavaScript", "Vue.js", "Next.js", "TailwindCSS", "Java", "Oracle"],
-      link: "#",
+        "This is the very thing you are visiting right now, my developer portfolio living inside a terminal.",
+      tech: ["TypeScript", "React.js", "TailwindCSS"],
+      link: "https://github.com/arBishal/Terminal-Devfolio",
+    },
+    {
+      name: "Fireflies",
+      description:
+        "This is a tribute to the near-extinction fireflies. Implemented an interactive canvas simulation of fireflies with physics-based movement and mouse/touch interaction.",
+      tech: ["JavaScript", "Vue.js", "TailwindCSS", "Canvas API"],
+      link: "https://github.com/arBishal/Fireflies",
     },
   ],
 
@@ -241,3 +248,16 @@ export const portfolioData: PortfolioData = {
     { name: "clear", description: "Clear terminal" },
   ],
 };
+
+// ----------------------------------------------------------
+// Available Visual Effects
+// ----------------------------------------------------------
+export interface EffectInfo {
+  name: string;
+  status?: "done" | "planning";
+}
+
+export const AVAILABLE_EFFECTS: EffectInfo[] = [
+  { name: "fireflies", status: "done" },
+  { name: "rain", status: "planning" },
+];

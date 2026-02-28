@@ -3,6 +3,7 @@ import { CommandLine } from "./CommandLine";
 import { TerminalOutput } from "./TerminalOutput";
 import { TerminalHeader } from "./TerminalHeader";
 import { WelcomeScreen } from "./WelcomeScreen";
+import { FirefliesCanvas } from "./FirefliesCanvas";
 import { useCommandExecutor } from "../hooks/useCommandExecutor";
 
 export function Terminal() {
@@ -27,6 +28,8 @@ export function Terminal() {
     historyIndex,
     setHistoryIndex,
     currentThemeName,
+    currentEffect,
+    clearEffect,
     executeCommand,
   } = useCommandExecutor({ setIsCommandsOpen });
 
@@ -86,6 +89,7 @@ export function Terminal() {
 
   return (
     <div data-theme={currentThemeName} className="theme-bg theme-text font-mono min-h-dvh">
+      {currentEffect === "fireflies" && <FirefliesCanvas onComplete={clearEffect} />}
       <div className="h-dvh flex flex-col">
         <TerminalHeader onClose={() => setIsClosed(true)} />
         <WelcomeScreen

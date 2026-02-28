@@ -1,18 +1,17 @@
 import { themeNames } from "../themes/themes";
+import { AVAILABLE_EFFECTS } from "../data/data";
 import type { ThemeName } from "../types/terminal";
-
-export const AVAILABLE_EFFECTS = ["fireflies", "rain"];
 
 export function renderThemeList(
     currentThemeName: ThemeName,
     executeCommand: (cmd: string) => void,
 ) {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ theme --list</p>
             <div className="pl-4">
                 <p className="theme-muted">Available themes:</p>
-                <div className="mt-2 space-y-2">
+                <div className="mt-2">
                     {themeNames.map((name) => (
                         <div key={name} className="flex items-center gap-3">
                             <button
@@ -27,7 +26,7 @@ export function renderThemeList(
                         </div>
                     ))}
                 </div>
-                <p className="theme-muted text-sm mt-4">
+                <p className="theme-muted text-sm mt-2">
                     Usage: theme &lt;theme-name&gt;
                 </p>
             </div>
@@ -40,20 +39,27 @@ export function renderFunList(
     executeCommand: (cmd: string) => void,
 ) {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ fun --list</p>
             <div className="pl-4">
                 <p className="theme-muted">Available effects:</p>
-                <div className="mt-2 space-y-2">
-                    {AVAILABLE_EFFECTS.map((effectName) => (
-                        <div key={effectName} className="flex items-center gap-3">
-                            <button
-                                onClick={() => executeCommand(`fun ${effectName}`)}
-                                className="theme-accent2 hover:underline cursor-pointer transition-colors"
-                            >
-                                {effectName}
-                            </button>
-                            {currentEffect === effectName && (
+                <div className="mt-2">
+                    {AVAILABLE_EFFECTS.map((effect) => (
+                        <div key={effect.name} className="flex items-center gap-3">
+                            {effect.status === "done" ? (
+                                <button
+                                    onClick={() => executeCommand(`fun ${effect.name}`)}
+                                    className="theme-accent2 hover:underline cursor-pointer transition-colors"
+                                >
+                                    {effect.name}
+                                </button>
+                            ) : (
+                                <span className="theme-muted">{effect.name}</span>
+                            )}
+                            {effect.status !== "done" && (
+                                <span className="theme-muted">(under development)</span>
+                            )}
+                            {currentEffect === effect.name && (
                                 <span className="theme-muted">(active)</span>
                             )}
                         </div>
@@ -61,9 +67,6 @@ export function renderFunList(
                 </div>
                 <p className="theme-muted text-sm mt-4">
                     Usage: fun &lt;effect-name&gt;
-                </p>
-                <p className="theme-muted text-sm">
-                    Note: Visual effects will be implemented soon!
                 </p>
             </div>
         </div>

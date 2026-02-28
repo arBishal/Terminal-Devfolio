@@ -9,7 +9,8 @@ import {
   renderResume, triggerResumeDownload, renderContact, renderBlog,
 } from "../commands/portfolio";
 import { renderHelp } from "../commands/help";
-import { renderThemeList, renderFunList, AVAILABLE_EFFECTS } from "../commands/visuals";
+import { renderThemeList, renderFunList } from "../commands/visuals";
+import { AVAILABLE_EFFECTS } from "../data/data";
 import {
   renderLs, renderPwd, renderWhoami, renderDate, renderSudo,
   renderHack, renderExit, renderHello, renderHistory, renderCat, renderEcho,
@@ -26,6 +27,7 @@ export interface CommandExecutor {
   setHistoryIndex: (index: number) => void;
   currentThemeName: ThemeName;
   currentEffect: string | null;
+  clearEffect: () => void;
   executeCommand: (cmd: string) => void;
 }
 
@@ -64,12 +66,35 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     }
 
     if (trimmedCmd.startsWith("fun ")) {
-      const name = trimmedCmd.slice(4).trim();
-      if (AVAILABLE_EFFECTS.includes(name)) {
-        setCurrentEffect(name);
-        push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; activated! (Coming soon...)</p>);
+      const args = trimmedCmd.slice(4).trim().split(/\s+/);
+      const name = args[0];
+      const subCmd = args[1];
+
+      // fun <effect> clear
+      if (subCmd === "clear") {
+        if (currentEffect === name) {
+          setCurrentEffect(null);
+          push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; cleared.</p>);
+        } else {
+          push("error", `Effect '${name}' is not currently active.`);
+        }
+        return;
+      }
+
+      const effect = AVAILABLE_EFFECTS.find(e => e.name === name);
+      if (effect) {
+        if (effect.status === "done") {
+          if (currentEffect === name) {
+            push("result", <p className="theme-muted">Effect &apos;{name}&apos; is already active. To clear it, run: <span className="theme-accent">fun {name} clear</span></p>);
+          } else {
+            setCurrentEffect(name);
+            push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; activated!</p>);
+          }
+        } else {
+          push("result", <p className="theme-muted">Effect &apos;{name}&apos; is under development.</p>);
+        }
       } else {
-        push("error", `Effect '${name}' not found. Available: ${AVAILABLE_EFFECTS.join(", ")}`);
+        push("error", `Effect '${name}' not found. Available: ${AVAILABLE_EFFECTS.map(e => e.name).join(", ")}`);
       }
       return;
     }
@@ -111,5 +136,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     }
   };
 
-  return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, executeCommand };
+  const clearEffect = () => setCurrentEffect(null);
+
+  return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, clearEffect, executeCommand };
 }
