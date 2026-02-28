@@ -26,6 +26,7 @@ export interface CommandExecutor {
   setHistoryIndex: (index: number) => void;
   currentThemeName: ThemeName;
   currentEffect: string | null;
+  clearEffect: () => void;
   executeCommand: (cmd: string) => void;
 }
 
@@ -67,7 +68,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       const name = trimmedCmd.slice(4).trim();
       if (AVAILABLE_EFFECTS.includes(name)) {
         setCurrentEffect(name);
-        push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; activated! (Coming soon...)</p>);
+        push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; activated!</p>);
       } else {
         push("error", `Effect '${name}' not found. Available: ${AVAILABLE_EFFECTS.join(", ")}`);
       }
@@ -111,5 +112,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     }
   };
 
-  return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, executeCommand };
+  const clearEffect = () => setCurrentEffect(null);
+
+  return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, clearEffect, executeCommand };
 }
