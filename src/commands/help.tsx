@@ -1,7 +1,7 @@
-import { portfolioData } from "../data/data";
+import { COMMANDS } from "@/data/staticData";
 
 // Pre-sorted at module scope — portfolioData is static, no need to re-sort per call
-const SORTED_COMMANDS = [...portfolioData.commands].sort((a, b) =>
+const SORTED_COMMANDS = [...COMMANDS].sort((a, b) =>
     a.name.localeCompare(b.name),
 );
 

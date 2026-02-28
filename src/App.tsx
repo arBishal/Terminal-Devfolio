@@ -1,4 +1,4 @@
-import { Terminal } from "./components/Terminal";
+import { Terminal } from "@/components/Terminal";
 
 export default function App() {
   return <Terminal />;

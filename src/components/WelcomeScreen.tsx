@@ -1,7 +1,8 @@
-import { portfolioData } from "../data/data";
+import { portfolioData } from "@/data/portfolioData";
+import { COMMANDS } from "@/data/staticData";
+import { asciiArt } from "@/data/asciiArt";
 
-// Sorted once at module scope — portfolioData is a constant, no need to re-sort on each render
-const SORTED_COMMANDS = [...portfolioData.commands].sort((a, b) =>
+const SORTED_COMMANDS = [...COMMANDS].sort((a, b) =>
   a.name.localeCompare(b.name),
 );
 
@@ -21,8 +22,8 @@ export function WelcomeScreen({
   return (
     <div className="border-b theme-bg theme-border">
       <div className="p-4 space-y-2">
-        <pre className="theme-accent text-sm">
-          {portfolioData.personal.asciiArt.trim()}
+        <pre className="theme-accent text-sm leading-tight">
+          {asciiArt}
         </pre>
         <p className="theme-header-text">
           Welcome to my terminal portfolio{" "}

@@ -1,4 +1,4 @@
-import type { OutputLine } from "../types/terminal";
+import type { OutputLine } from "@/types/terminal";
 
 interface TerminalOutputProps {
   history: OutputLine[];

@@ -1,6 +1,6 @@
-import { themeNames } from "../themes/themes";
-import { AVAILABLE_EFFECTS } from "../data/data";
-import type { ThemeName } from "../types/terminal";
+import { themeNames } from "@/themes/themes";
+import { AVAILABLE_EFFECTS } from "@/data/staticData";
+import type { ThemeName } from "@/types/terminal";
 
 /** Renders the interactive theme picker shown by the `theme` command. */
 export function renderThemeList(

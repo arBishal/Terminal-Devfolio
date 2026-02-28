@@ -1,4 +1,4 @@
-import { portfolioData } from "../data/data";
+import { portfolioData } from "@/data/portfolioData";
 
 interface TerminalHeaderProps {
   onClose: () => void;

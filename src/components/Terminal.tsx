@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { CommandLine } from "./CommandLine";
-import { TerminalOutput } from "./TerminalOutput";
-import { TerminalHeader } from "./TerminalHeader";
-import { WelcomeScreen } from "./WelcomeScreen";
-import { FirefliesCanvas } from "./FirefliesCanvas";
-import { useCommandExecutor } from "../hooks/useCommandExecutor";
+import { CommandLine } from "@/components/CommandLine";
+import { TerminalOutput } from "@/components/TerminalOutput";
+import { TerminalHeader } from "@/components/TerminalHeader";
+import { WelcomeScreen } from "@/components/WelcomeScreen";
+import { FirefliesCanvas } from "@/components/FirefliesCanvas";
+import { useCommandExecutor } from "@/hooks/useCommandExecutor";
 
 /**
  * Root component — owns layout, theme attribute, scroll-to-latest logic,
