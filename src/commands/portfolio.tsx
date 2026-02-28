@@ -2,17 +2,17 @@ import { portfolioData } from "../data/data";
 
 export function renderAbout() {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ whoami</p>
-            <div className="pl-4 space-y-2 theme-text">
+            <div className="pl-4 space-y-1 theme-text">
                 {portfolioData.personal.bio.map((line, i) => (
                     <p key={i}>{line}</p>
                 ))}
             </div>
-            <div className="mt-4 pl-4">
+            <div className="mt-2 pl-4">
                 <p className="theme-accent2">Location:</p>
                 <p className="theme-text pl-4">{portfolioData.personal.location}</p>
-                <p className="theme-accent2 mt-2">Education:</p>
+                <p className="theme-accent2 mt-1">Education:</p>
                 {portfolioData.personal.education.map((line, i) => (
                     <p key={i} className="theme-text pl-4">{line}</p>
                 ))}
@@ -23,7 +23,7 @@ export function renderAbout() {
 
 export function renderSkills() {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ cat skills.json</p>
             <div className="pl-4 font-mono text-sm">
                 <p className="theme-muted">{"{"}</p>
@@ -49,9 +49,9 @@ export function renderSkills() {
 
 export function renderProjects() {
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             <p className="theme-warning">$ ls -la ~/projects/</p>
-            <div className="space-y-4 pl-4">
+            <div className="space-y-2 pl-4">
                 {portfolioData.projects.map((project) => (
                     <div key={project.name} className="border-l-2 theme-border pl-4">
                         <p className="theme-accent2 font-semibold">{project.name}</p>
@@ -76,7 +76,7 @@ export function renderProjects() {
 
 export function renderExperience() {
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             <p className="theme-warning">$ cat experience.log</p>
             <div className="space-y-4 pl-4">
                 {portfolioData.experience.map((job) => (
@@ -110,9 +110,9 @@ export function triggerResumeDownload() {
 
 export function renderResume() {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ wget resume.pdf</p>
-            <div className="pl-4 space-y-2">
+            <div className="pl-4 space-y-1">
                 <p className="theme-text">Downloading resume...</p>
                 <div className="flex items-center gap-2">
                     <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -120,17 +120,14 @@ export function renderResume() {
                     </div>
                     <span className="theme-accent">100%</span>
                 </div>
-                <p className="theme-accent2 mt-2">✓ Resume downloaded successfully!</p>
+                <p className="theme-accent2 mt-1">✓ Resume download initiated successfully!</p>
                 <a
                     href={portfolioData.resume.filePath}
                     download={portfolioData.resume.downloadFilename}
-                    className="inline-block mt-2 px-4 py-2 theme-accent-bg rounded hover:opacity-80 transition-colors font-medium"
+                    className="inline-block mt-1 px-4 py-2 theme-accent-bg rounded hover:opacity-80 transition-colors font-medium"
                 >
                     Click here if download doesn&apos;t start
                 </a>
-                <p className="theme-muted text-sm mt-2">
-                    Note: Place your resume.pdf in the public folder
-                </p>
             </div>
         </div>
     );
@@ -138,9 +135,9 @@ export function renderResume() {
 
 export function renderContact() {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ cat contact.txt</p>
-            <div className="pl-4 space-y-2">
+            <div className="pl-4">
                 <div className="flex items-center gap-3">
                     <span className="theme-accent2">Email:</span>
                     <a
@@ -164,21 +161,21 @@ export function renderContact() {
                     </div>
                 ))}
             </div>
-            <p className="theme-muted mt-4 pl-4 text-sm">{portfolioData.contact.note}</p>
+            <p className="theme-muted mt-2 pl-4 text-sm">{portfolioData.contact.note}</p>
         </div>
     );
 }
 
 export function renderBlog() {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             <p className="theme-warning">$ cat blog-links.txt</p>
-            <div className="pl-4 space-y-2">
-                <p className="theme-text mb-3">
+            <div className="pl-4">
+                <p className="theme-text mb-2">
                     Check out my articles and technical writing:
                 </p>
                 {portfolioData.blog.links.map((item) => (
-                    <div key={item.label} className="flex items-center gap-3">
+                    <div key={item.label} className="flex items-center gap-2">
                         <span className="theme-accent2">{item.label}:</span>
                         <a
                             href={item.url}
@@ -191,7 +188,7 @@ export function renderBlog() {
                     </div>
                 ))}
             </div>
-            <p className="theme-muted mt-4 pl-4 text-sm">{portfolioData.blog.tagline}</p>
+            <p className="theme-muted mt-2 pl-4 text-sm">{portfolioData.blog.tagline}</p>
         </div>
     );
 }

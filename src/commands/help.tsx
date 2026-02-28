@@ -10,7 +10,7 @@ export function renderHelp(commands: Command[]) {
     return (
         <div className="space-y-2">
             <p className="theme-warning">Available commands:</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 mt-2">
+            <div className="pl-4 grid grid-cols-1 md:grid-cols-2">
                 {[...commands]
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((cmd) => (
