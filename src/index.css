@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Terminal Theme System
+   Applied via data-theme attribute on the terminal root element.
+   ============================================================ */
+
+/* ── Dark ────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --t-bg: #171717;
+  /* neutral-900 */
+  --t-text: #f5f5f5;
+  /* neutral-100 */
+  --t-accent: #4ade80;
+  /* green-400   */
+  --t-muted: #a3a3a3;
+  /* neutral-400 */
+  --t-error: #f87171;
+  /* red-400     */
+  --t-warning: #fbbf24;
+  /* amber-400   */
+  --t-border: #404040;
+  /* neutral-700 */
+  --t-header-bg: #262626;
+  /* neutral-800 */
+  --t-header-text: #e5e5e5;
+  /* neutral-200 */
+  --t-btn-text: #000000;
+  --t-accent2: #60a5fa;
+  /* blue-400    */
+}
+
+/* ── Light ───────────────────────────────────────────────── */
+[data-theme="light"] {
+  --t-bg: #ffffff;
+  --t-text: #111827;
+  /* gray-900   */
+  --t-accent: #2563eb;
+  /* blue-600   */
+  --t-muted: #6b7280;
+  /* gray-500   */
+  --t-error: #dc2626;
+  /* red-600    */
+  --t-warning: #ea580c;
+  /* orange-600 */
+  --t-border: #d1d5db;
+  /* gray-300   */
+  --t-header-bg: #f3f4f6;
+  /* gray-100   */
+  --t-header-text: #111827;
+  --t-btn-text: #ffffff;
+  --t-accent2: #4ade80;
+  /* green-400   */
+}
+
+/* ── Ubuntu — GNOME Terminal default Ubuntu profile ──────────
+   bg #300A24 / fg #FFFFFF (Ubuntu Suru / Tango ANSI palette)
+   ─────────────────────────────────────────────────────────── */
+[data-theme="ubuntu"] {
+  --t-bg: #300A24;
+  /* Ubuntu aubergine              */
+  --t-text: #FFFFFF;
+  --t-accent: #E95420;
+  /* Ubuntu orange (Suru)          */
+  --t-muted: #AD7FA8;
+  /* Tango bright-purple           */
+  --t-error: #EF2929;
+  /* Tango bright-red              */
+  --t-warning: #FCE94F;
+  /* Tango bright-yellow           */
+  --t-border: #4C0D3E;
+  /* dark aubergine                */
+  --t-header-bg: #2C001E;
+  /* Ubuntu terminal header bg     */
+  --t-header-text: #FFFFFF;
+  --t-btn-text: #FFFFFF;
+  /* text on accent-bg button      */
+  --t-accent2: #C34113;
+  /* Suru dark orange              */
+}
+
+/* ============================================================
+   Theme Utility Classes
+   Use these in JSX instead of passing a theme prop.
+   ============================================================ */
+
+.theme-bg {
+  background-color: var(--t-bg);
+}
+
+.theme-text {
+  color: var(--t-text);
+}
+
+.theme-accent {
+  color: var(--t-accent);
+}
+
+.theme-accent2 {
+  color: var(--t-accent2);
+}
+
+.theme-accent-bg {
+  background-color: var(--t-accent);
+  color: var(--t-btn-text);
+}
+
+.theme-muted {
+  color: var(--t-muted);
+}
+
+.theme-error {
+  color: var(--t-error);
+}
+
+.theme-warning {
+  color: var(--t-warning);
+}
+
+.theme-border {
+  border-color: var(--t-border);
+}
+
+.theme-header-bg {
+  background-color: var(--t-header-bg);
+}
+
+.theme-header-text {
+  color: var(--t-header-text);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+html {
+  font-size: 16px;
+}
