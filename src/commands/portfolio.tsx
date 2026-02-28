@@ -54,7 +54,7 @@ export function renderProjects() {
             <div className="space-y-2 pl-4">
                 {portfolioData.projects.map((project) => (
                     <div key={project.name} className="border-l-2 theme-border pl-4">
-                        <p className="theme-accent2 font-semibold">{project.name}</p>
+                        <p className="theme-accent font-semibold">{project.name}</p>
                         <p className="theme-text text-sm mt-1">{project.description}</p>
                         <p className="theme-muted text-sm mt-2">
                             Tech: {project.tech.join(" • ")}
