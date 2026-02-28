@@ -29,7 +29,7 @@ export function WelcomeScreen({
           {portfolioData.personal.portfolioVersion}
         </p>
 
-        <div className="mt-4">
+        <div className="space-y-2">
           {/* "Available commands" row with inline chevron toggle */}
           <div className="flex items-center gap-2">
             <p className="theme-warning">Available commands:</p>
@@ -51,10 +51,10 @@ export function WelcomeScreen({
           <div
             className={`
               overflow-hidden transition-all duration-300 ease-in-out
-              ${isCommandsOpen ? "max-h-[500px]" : "max-h-0"}
+              ${isCommandsOpen ? "max-h-96" : "max-h-0"}
             `}
           >
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-2 lg:grid-cols-3">
               {SORTED_COMMANDS.map((cmd) => (
                 <div key={cmd.name}>
                   <button
