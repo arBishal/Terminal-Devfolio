@@ -1,7 +1,6 @@
 import { themeNames } from "../themes/themes";
+import { AVAILABLE_EFFECTS } from "../data/data";
 import type { ThemeName } from "../types/terminal";
-
-export const AVAILABLE_EFFECTS = ["fireflies", "rain"];
 
 export function renderThemeList(
     currentThemeName: ThemeName,
@@ -45,15 +44,22 @@ export function renderFunList(
             <div className="pl-4">
                 <p className="theme-muted">Available effects:</p>
                 <div className="mt-2">
-                    {AVAILABLE_EFFECTS.map((effectName) => (
-                        <div key={effectName} className="flex items-center gap-3">
-                            <button
-                                onClick={() => executeCommand(`fun ${effectName}`)}
-                                className="theme-accent2 hover:underline cursor-pointer transition-colors"
-                            >
-                                {effectName}
-                            </button>
-                            {currentEffect === effectName && (
+                    {AVAILABLE_EFFECTS.map((effect) => (
+                        <div key={effect.name} className="flex items-center gap-3">
+                            {effect.status === "done" ? (
+                                <button
+                                    onClick={() => executeCommand(`fun ${effect.name}`)}
+                                    className="theme-accent2 hover:underline cursor-pointer transition-colors"
+                                >
+                                    {effect.name}
+                                </button>
+                            ) : (
+                                <span className="theme-muted">{effect.name}</span>
+                            )}
+                            {effect.status !== "done" && (
+                                <span className="theme-muted">(under development)</span>
+                            )}
+                            {currentEffect === effect.name && (
                                 <span className="theme-muted">(active)</span>
                             )}
                         </div>

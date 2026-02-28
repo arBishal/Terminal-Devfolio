@@ -248,3 +248,16 @@ export const portfolioData: PortfolioData = {
     { name: "clear", description: "Clear terminal" },
   ],
 };
+
+// ----------------------------------------------------------
+// Available Visual Effects
+// ----------------------------------------------------------
+export interface EffectInfo {
+  name: string;
+  status?: "done" | "planning";
+}
+
+export const AVAILABLE_EFFECTS: EffectInfo[] = [
+  { name: "fireflies", status: "done" },
+  { name: "rain", status: "planning" },
+];
