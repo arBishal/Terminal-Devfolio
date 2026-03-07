@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+  /* Dark theme defaults — overridden per element by [data-theme] blocks below */
+  --color-t-bg: #171717;
+  --color-t-text: #f5f5f5;
+  --color-t-accent: #4ade80;
+  --color-t-accent2: #60a5fa;
+  --color-t-muted: #a3a3a3;
+  --color-t-error: #f87171;
+  --color-t-warning: #fbbf24;
+  --color-t-border: #404040;
+  --color-t-header-bg: #262626;
+  --color-t-header-text: #e5e5e5;
+  --color-t-btn-text: #000000;
+}
+
 /* ============================================================
    Terminal Theme System
    Applied via data-theme attribute on the terminal root element.
@@ -8,126 +23,218 @@
 /* ── Dark ────────────────────────────────────────────────── */
 :root,
 [data-theme="dark"] {
-  --t-bg: #171717;
+  --color-t-bg: #171717;
   /* neutral-900 */
-  --t-text: #f5f5f5;
+  --color-t-text: #f5f5f5;
   /* neutral-100 */
-  --t-accent: #4ade80;
+  --color-t-accent: #4ade80;
   /* green-400   */
-  --t-muted: #a3a3a3;
-  /* neutral-400 */
-  --t-error: #f87171;
-  /* red-400     */
-  --t-warning: #fbbf24;
-  /* amber-400   */
-  --t-border: #404040;
-  /* neutral-700 */
-  --t-header-bg: #262626;
-  /* neutral-800 */
-  --t-header-text: #e5e5e5;
-  /* neutral-200 */
-  --t-btn-text: #000000;
-  --t-accent2: #60a5fa;
+  --color-t-accent2: #60a5fa;
   /* blue-400    */
+  --color-t-muted: #a3a3a3;
+  /* neutral-400 */
+  --color-t-error: #f87171;
+  /* red-400     */
+  --color-t-warning: #fbbf24;
+  /* amber-400   */
+  --color-t-border: #404040;
+  /* neutral-700 */
+  --color-t-header-bg: #262626;
+  /* neutral-800 */
+  --color-t-header-text: #e5e5e5;
+  /* neutral-200 */
+  --color-t-btn-text: #000000;
 }
 
 /* ── Light ───────────────────────────────────────────────── */
 [data-theme="light"] {
-  --t-bg: #ffffff;
-  --t-text: #111827;
+  --color-t-bg: #ffffff;
+  --color-t-text: #111827;
   /* gray-900   */
-  --t-accent: #2563eb;
+  --color-t-accent: #2563eb;
   /* blue-600   */
-  --t-muted: #6b7280;
-  /* gray-500   */
-  --t-error: #dc2626;
-  /* red-600    */
-  --t-warning: #c2410c;
-  /* orange-700 — darkened from orange-600 for 5.2:1 contrast on white */
-  --t-border: #d1d5db;
-  /* gray-300   */
-  --t-header-bg: #f3f4f6;
-  /* gray-100   */
-  --t-header-text: #111827;
-  --t-btn-text: #ffffff;
-  --t-accent2: #15803d;
+  --color-t-accent2: #15803d;
   /* green-700 — darkened from green-400 (1.7:1) to 5.0:1 contrast on white */
+  --color-t-muted: #6b7280;
+  /* gray-500   */
+  --color-t-error: #dc2626;
+  /* red-600    */
+  --color-t-warning: #c2410c;
+  /* orange-700 — darkened from orange-600 for 5.2:1 contrast on white */
+  --color-t-border: #d1d5db;
+  /* gray-300   */
+  --color-t-header-bg: #f3f4f6;
+  /* gray-100   */
+  --color-t-header-text: #111827;
+  --color-t-btn-text: #ffffff;
+}
+
+/* ── CMD — Windows Command Prompt ────────────────────────────
+   Classic cmd.exe default: COLOR 07 — black bg, light gray fg.
+   Strictly monochrome — yellow/cyan never appear in default CMD.
+   Only red (color C) is used for explicit error output.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="windows"] {
+  --color-t-bg: #000000;
+  /* color 0 — black             */
+  --color-t-text: #C0C0C0;
+  /* color 7 — light gray (default fg) */
+  --color-t-accent: #FFFFFF;
+  /* color F — bright white      */
+  --color-t-accent2: #C0C0C0;
+  /* color 7 — light gray        */
+  --color-t-muted: #808080;
+  /* color 8 — dark gray         */
+  --color-t-error: #FF0000;
+  /* color C — bright red        */
+  --color-t-warning: #FFFFFF;
+  /* color F — bright white (no yellow in default CMD) */
+  --color-t-border: #808080;
+  /* color 8 — dark gray         */
+  --color-t-header-bg: #000000;
+  /* color 0 — black title bar   */
+  --color-t-header-text: #C0C0C0;
+  /* color 7 — light gray        */
+  --color-t-btn-text: #000000;
+  /* black text on white accent  */
 }
 
 /* ── Ubuntu — GNOME Terminal default Ubuntu profile ──────────
    bg #300A24 / fg #FFFFFF (Ubuntu Suru / Tango ANSI palette)
    ─────────────────────────────────────────────────────────── */
 [data-theme="ubuntu"] {
-  --t-bg: #300A24;
+  --color-t-bg: #300A24;
   /* Ubuntu aubergine              */
-  --t-text: #FFFFFF;
-  --t-accent: #E95420;
+  --color-t-text: #FFFFFF;
+  --color-t-accent: #E95420;
   /* Ubuntu orange (Suru)          */
-  --t-muted: #AD7FA8;
-  /* Tango bright-purple           */
-  --t-error: #FF4444;
-  /* brightened from #EF2929 (4.2:1) to 5.2:1 contrast on aubergine */
-  --t-warning: #FCE94F;
-  /* Tango bright-yellow           */
-  --t-border: #4C0D3E;
-  /* dark aubergine                */
-  --t-header-bg: #2C001E;
-  /* Ubuntu terminal header bg     */
-  --t-header-text: #FFFFFF;
-  --t-btn-text: #FFFFFF;
-  /* text on accent-bg button      */
-  --t-accent2: #FF7433;
+  --color-t-accent2: #FF7433;
   /* brightened from #C34113 (3.4:1) to 6.5:1 contrast on aubergine */
+  --color-t-muted: #AD7FA8;
+  /* Tango bright-purple           */
+  --color-t-error: #FF4444;
+  /* brightened from #EF2929 (4.2:1) to 5.2:1 contrast on aubergine */
+  --color-t-warning: #FCE94F;
+  /* Tango bright-yellow           */
+  --color-t-border: #4C0D3E;
+  /* dark aubergine                */
+  --color-t-header-bg: #2C001E;
+  /* Ubuntu terminal header bg     */
+  --color-t-header-text: #FFFFFF;
+  --color-t-btn-text: #FFFFFF;
+  /* text on accent-bg button      */
 }
 
-/* ============================================================
-   Theme Utility Classes
-   Use these in JSX instead of passing a theme prop.
-   ============================================================ */
-
-.theme-bg {
-  background-color: var(--t-bg);
+/* ── Dracula ─────────────────────────────────────────────────
+   https://draculatheme.com — official palette
+   ─────────────────────────────────────────────────────────── */
+[data-theme="dracula"] {
+  --color-t-bg: #282a36;
+  /* Background              */
+  --color-t-text: #f8f8f2;
+  /* Foreground              */
+  --color-t-accent: #bd93f9;
+  /* Purple — signature      */
+  --color-t-accent2: #8be9fd;
+  /* Cyan                    */
+  --color-t-muted: #6272a4;
+  /* Comment                 */
+  --color-t-error: #ff5555;
+  /* Red                     */
+  --color-t-warning: #f1fa8c;
+  /* Yellow                  */
+  --color-t-border: #44475a;
+  /* Current Line            */
+  --color-t-header-bg: #21222c;
+  /* darker bg               */
+  --color-t-header-text: #f8f8f2;
+  /* Foreground              */
+  --color-t-btn-text: #282a36;
+  /* dark text on accent     */
 }
 
-.theme-text {
-  color: var(--t-text);
+/* ── Monokai ──────────────────────────────────────────────────
+   Wimer Hazenberg, 2006 — Sublime Text's iconic default theme
+   ─────────────────────────────────────────────────────────── */
+[data-theme="sublime"] {
+  --color-t-bg: #272822;
+  /* Classic Monokai background    */
+  --color-t-text: #F8F8F2;
+  /* Foreground                    */
+  --color-t-accent: #A6E22E;
+  /* Green                         */
+  --color-t-accent2: #66D9EF;
+  /* Cyan                          */
+  --color-t-muted: #75715E;
+  /* Comment / gray                */
+  --color-t-error: #F92672;
+  /* Red / pink                    */
+  --color-t-warning: #FD971F;
+  /* Orange                        */
+  --color-t-border: #3E3D32;
+  /* Slightly lighter bg           */
+  --color-t-header-bg: #1E1F1C;
+  /* Darker bg                     */
+  --color-t-header-text: #F8F8F2;
+  /* Foreground                    */
+  --color-t-btn-text: #272822;
+  /* Dark text on accent           */
 }
 
-.theme-accent {
-  color: var(--t-accent);
+/* ── One Dark ─────────────────────────────────────────────────
+   Atom default theme, 2014 — https://github.com/atom/atom
+   ─────────────────────────────────────────────────────────── */
+[data-theme="atom"] {
+  --color-t-bg: #282c34;
+  /* Editor background             */
+  --color-t-text: #abb2bf;
+  /* Foreground                    */
+  --color-t-accent: #61afef;
+  /* Blue                          */
+  --color-t-accent2: #c678dd;
+  /* Purple                        */
+  --color-t-muted: #5c6370;
+  /* Gutter / comment              */
+  --color-t-error: #e06c75;
+  /* Red                           */
+  --color-t-warning: #e5c07b;
+  /* Yellow                        */
+  --color-t-border: #3e4451;
+  /* Selection / border            */
+  --color-t-header-bg: #21252b;
+  /* Darker bg                     */
+  --color-t-header-text: #abb2bf;
+  /* Foreground                    */
+  --color-t-btn-text: #282c34;
+  /* Dark text on accent           */
 }
 
-.theme-accent2 {
-  color: var(--t-accent2);
-}
-
-.theme-accent-bg {
-  background-color: var(--t-accent);
-  color: var(--t-btn-text);
-}
-
-.theme-muted {
-  color: var(--t-muted);
-}
-
-.theme-error {
-  color: var(--t-error);
-}
-
-.theme-warning {
-  color: var(--t-warning);
-}
-
-.theme-border {
-  border-color: var(--t-border);
-}
-
-.theme-header-bg {
-  background-color: var(--t-header-bg);
-}
-
-.theme-header-text {
-  color: var(--t-header-text);
+/* ── GitHub Dark ──────────────────────────────────────────────
+   GitHub's official dark mode — https://primer.style/primitives
+   ─────────────────────────────────────────────────────────── */
+[data-theme="github"] {
+  --color-t-bg: #0d1117;
+  /* canvas.default               */
+  --color-t-text: #c9d1d9;
+  /* fg.default                   */
+  --color-t-accent: #58a6ff;
+  /* accent.fg                    */
+  --color-t-accent2: #3fb950;
+  /* success.fg                   */
+  --color-t-muted: #6e7681;
+  /* fg.muted                     */
+  --color-t-error: #f85149;
+  /* danger.fg                    */
+  --color-t-warning: #d29922;
+  /* attention.fg                 */
+  --color-t-border: #30363d;
+  /* border.default               */
+  --color-t-header-bg: #161b22;
+  /* canvas.overlay               */
+  --color-t-header-text: #c9d1d9;
+  /* fg.default                   */
+  --color-t-btn-text: #0d1117;
+  /* dark text on accent          */
 }
 
 /* ============================================================

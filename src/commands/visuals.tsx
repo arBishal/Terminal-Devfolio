@@ -9,25 +9,25 @@ export function renderThemeList(
 ) {
     return (
         <div className="space-y-2">
-            <p className="theme-warning">$ theme --list</p>
+            <p className="text-t-warning">$ theme --list</p>
             <div className="pl-4">
-                <p className="theme-muted">Available themes:</p>
+                <p className="text-t-muted">Available themes:</p>
                 <div className="mt-2">
                     {themeNames.map((name) => (
                         <div key={name} className="flex items-center gap-3">
                             <button
                                 onClick={() => executeCommand(`theme ${name}`)}
-                                className="theme-accent hover:underline cursor-pointer transition-colors"
+                                className="text-t-accent hover:underline cursor-pointer transition-colors"
                             >
                                 {name}
                             </button>
                             {currentThemeName === name && (
-                                <span className="theme-muted">(current)</span>
+                                <span className="text-t-muted">(current)</span>
                             )}
                         </div>
                     ))}
                 </div>
-                <p className="theme-muted text-sm mt-2">
+                <p className="text-t-muted text-sm mt-2">
                     Usage: theme &lt;theme-name&gt;
                 </p>
             </div>
@@ -46,32 +46,32 @@ export function renderFunList(
 ) {
     return (
         <div className="space-y-2">
-            <p className="theme-warning">$ fun --list</p>
+            <p className="text-t-warning">$ fun --list</p>
             <div className="pl-4">
-                <p className="theme-muted">Available effects:</p>
+                <p className="text-t-muted">Available effects:</p>
                 <div className="mt-2">
                     {AVAILABLE_EFFECTS.map((effect) => (
                         <div key={effect.name} className="flex items-center gap-3">
                             {effect.status === "done" ? (
                                 <button
                                     onClick={() => executeCommand(`fun ${effect.name}`)}
-                                    className="theme-accent2 hover:underline cursor-pointer transition-colors"
+                                    className="text-t-accent2 hover:underline cursor-pointer transition-colors"
                                 >
                                     {effect.name}
                                 </button>
                             ) : (
-                                <span className="theme-muted">{effect.name}</span>
+                                <span className="text-t-muted">{effect.name}</span>
                             )}
                             {effect.status !== "done" && (
-                                <span className="theme-muted">(under development)</span>
+                                <span className="text-t-muted">(under development)</span>
                             )}
                             {currentEffect === effect.name && (
-                                <span className="theme-muted">(active)</span>
+                                <span className="text-t-muted">(active)</span>
                             )}
                         </div>
                     ))}
                 </div>
-                <p className="theme-muted text-sm mt-4">
+                <p className="text-t-muted text-sm mt-4">
                     Usage: fun &lt;effect-name&gt;
                 </p>
             </div>

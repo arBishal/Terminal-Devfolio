@@ -110,7 +110,7 @@ export function CommandLine({
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <span className="theme-accent flex-shrink-0">guest@portfolio:~$</span>
+      <span className="text-t-accent flex-shrink-0">guest@portfolio:~$</span>
       {/* Inline input + ghost text + cursor all on one line */}
       <div className="relative flex items-center flex-1 min-w-0 pr-5">
         <input
@@ -124,16 +124,16 @@ export function CommandLine({
           onTouchEnd={handleTouchEnd}
           // ch unit = one character width — exact in font-mono
           style={{ width: `${Math.max(input.length, 1)}ch` }}
-          className="bg-transparent border-none outline-none theme-header-text caret-current p-0 m-0 min-w-0"
+          className="bg-transparent border-none outline-none text-t-header-text caret-current p-0 m-0 min-w-0"
           spellCheck="false"
           autoComplete="off"
         />
         {ghostText && (
-          <span className="theme-muted opacity-50 pointer-events-none select-none whitespace-pre">
+          <span className="text-t-muted opacity-50 pointer-events-none select-none whitespace-pre">
             {ghostText}
           </span>
         )}
-        <span className="theme-accent animate-pulse absolute right-0">▊</span>
+        <span className="text-t-accent animate-pulse absolute right-0">▊</span>
       </div>
     </form>
   );

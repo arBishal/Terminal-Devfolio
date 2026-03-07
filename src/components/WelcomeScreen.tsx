@@ -20,12 +20,12 @@ export function WelcomeScreen({
   onTogglePointerDown,
 }: WelcomeScreenProps) {
   return (
-    <div className="border-b theme-bg theme-border">
+    <div className="border-b bg-t-bg border-t-border">
       <div className="p-4 space-y-2">
-        <pre className="theme-accent text-sm leading-tight">
+        <pre className="text-t-accent text-sm leading-tight">
           {asciiArt}
         </pre>
-        <p className="theme-header-text">
+        <p className="text-t-header-text">
           Welcome to my terminal portfolio{" "}
           {portfolioData.personal.portfolioVersion}
         </p>
@@ -33,11 +33,11 @@ export function WelcomeScreen({
         <div className="space-y-2">
           {/* "Available commands" row with inline chevron toggle */}
           <div className="flex items-center gap-2">
-            <p className="theme-warning">Available commands:</p>
+            <p className="text-t-warning">Available commands:</p>
             <button
               onClick={onToggleCommands}
               onPointerDown={onTogglePointerDown}
-              className="theme-muted hover:opacity-80 transition-opacity text-xs leading-none"
+              className="text-t-muted hover:opacity-80 transition-opacity text-xs leading-none"
               aria-label={isCommandsOpen ? "Collapse commands" : "Expand commands"}
               title={isCommandsOpen ? "Collapse commands" : "Expand commands"}
             >
@@ -60,11 +60,11 @@ export function WelcomeScreen({
                 <div key={cmd.name}>
                   <button
                     onClick={() => onCommandClick(cmd.name)}
-                    className="theme-accent hover:opacity-80 hover:underline cursor-pointer transition-colors"
+                    className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors"
                   >
                     {cmd.name}
                   </button>
-                  <span className="theme-header-text hidden sm:inline">
+                  <span className="text-t-header-text hidden sm:inline">
                     {" "}- {cmd.description}
                   </span>
                 </div>

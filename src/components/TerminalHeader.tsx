@@ -24,13 +24,13 @@ const closeIcon = (
 
 export function TerminalHeader({ onClose }: TerminalHeaderProps) {
   return (
-    <div className="px-4 py-2 flex items-center justify-between border-b flex-shrink-0 theme-header-bg theme-border">
-      <div className="theme-header-text text-sm">
+    <div className="px-4 py-2 flex items-center justify-between border-b flex-shrink-0 bg-t-header-bg border-t-border">
+      <div className="text-t-header-text text-sm">
         {portfolioData.personal.fullName}&apos;s Terminal Portfolio
       </div>
       <button
         onClick={onClose}
-        className="theme-muted hover:text-red-400 transition-colors"
+        className="text-t-muted hover:text-red-400 transition-colors"
         aria-label="Close terminal"
       >
         {closeIcon}
