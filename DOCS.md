@@ -22,6 +22,7 @@ A beginner-friendly walkthrough of every layer of the codebase: what each file d
 14. [How a Command Flows End-to-End](#14-how-a-command-flows-end-to-end)
 15. [How Mobile UX Works](#15-how-mobile-ux-works)
 16. [Visual Effects System](#16-visual-effects-system)
+17. [Testing](#17-testing)
 
 ---
 
@@ -234,10 +235,10 @@ The panel uses a CSS `max-height` transition. When `isCommandsOpen` is false, `m
 Renders the `history` array. Each entry has a `type` and `content`:
 
 ```ts
-type OutputLine =
-  | { type: "command"; content: string }    // the user's input — shown with prompt
-  | { type: "result";  content: JSX.Element | string }  // command output
-  | { type: "error";   content: string }    // error message
+type OutputLine = {
+  type: "command" | "result" | "error";
+  content: React.ReactNode;  // string, JSX, fragment, null — anything React can render
+}
 ```
 
 The component maps over the array and renders each type differently:
@@ -273,10 +274,10 @@ guest@portfolio:~$ ab|out                                              ▊
 
 ### Autocomplete
 
-`AVAILABLE_COMMANDS` is a sorted array of all valid commands — including hidden ones. As the user types, the array is filtered by `startsWith`:
+`ALL_COMMAND_NAMES` is a sorted array of all valid command names — including hidden ones — derived from `commandRegistry.ts`. As the user types, it is filtered by `startsWith`:
 
 ```tsx
-const matches = AVAILABLE_COMMANDS.filter(cmd => cmd.startsWith(value.toLowerCase()));
+const matches = ALL_COMMAND_NAMES.filter(cmd => cmd.startsWith(value.toLowerCase()));
 setSuggestions(matches);
 ```
 
@@ -702,6 +703,66 @@ A self-contained React component that renders fireflies using the Canvas API:
 - **Non-blocking**: `pointer-events: none` on the canvas ensures the terminal remains fully interactive
 
 Constants (colour, size, speed, pulse rate) are ported directly from the [Fireflies](https://github.com/arBishal/Fireflies) project.
+
+---
+
+## 17. Testing
+
+The project uses **Vitest** (test runner) + **React Testing Library** (component rendering + assertions) + **@testing-library/user-event** (realistic user interaction simulation).
+
+### Setup
+
+```
+src/__tests__/
+├── setup.ts                  # Loads jest-dom matchers; stubs window.matchMedia
+├── commands/                 # Layer 1 — pure renderer functions
+│   ├── help.test.tsx
+│   ├── misc.test.tsx
+│   ├── portfolio.test.tsx
+│   └── visuals.test.tsx
+├── hooks/                    # Layer 2 & 3 — custom hooks
+│   ├── useTerminalHistory.test.ts
+│   ├── useTheme.test.ts
+│   ├── useActiveEffect.test.ts
+│   └── useCommandExecutor.test.tsx
+└── components/               # Layer 4 & 5 — UI components
+    ├── CommandLine.test.tsx
+    └── TerminalOutput.test.tsx
+```
+
+Configuration lives in `vite.config.ts` under the `test` key:
+
+```ts
+test: {
+  environment: "jsdom",  // simulates a browser DOM in Node
+  globals: true,         // no need to import describe/it/expect
+  setupFiles: ["./src/__tests__/setup.ts"],
+}
+```
+
+### What each layer tests
+
+| Layer | Files | Focus |
+|---|---|---|
+| 1 | `commands/*.test.tsx` | Pure renderers — content, link attributes, edge cases |
+| 2 | `hooks/useTerminalHistory`, `useTheme`, `useActiveEffect` | State init, updates, ref-mirror sync |
+| 3 | `hooks/useCommandExecutor` | Command dispatch, prefix handlers, theme/effect/history logic |
+| 4 | `components/CommandLine` | Input, submit, autocomplete, history nav, focus callbacks |
+| 5 | `components/TerminalOutput` | Entry types, `data-cmd` attribute, JSX content, empty state |
+
+### Running tests
+
+```bash
+npm run test            # single run
+npm run test:watch      # watch mode
+npm run test:coverage   # coverage report → coverage/
+```
+
+### Not covered
+
+- `FirefliesCanvas` — canvas/WebGL animation requires a canvas mock or visual regression tooling
+- `Terminal` — full integration behaviour (scroll, keyboard routing) is better suited to an e2e tool like Playwright
+- `WelcomeScreen` — static presentational component; low risk, low priority
 
 ### Adding a new effect
 

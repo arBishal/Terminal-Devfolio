@@ -61,6 +61,22 @@ Hidden / easter-egg commands: `ls`, `pwd`, `whoami`, `date`, `sudo`, `hack`, `he
 
 ```
 src/
+├── __tests__/
+│   ├── setup.ts                         # jest-dom matchers + jsdom stubs
+│   ├── commands/
+│   │   ├── help.test.tsx
+│   │   ├── misc.test.tsx
+│   │   ├── portfolio.test.tsx
+│   │   └── visuals.test.tsx
+│   ├── hooks/
+│   │   ├── useActiveEffect.test.ts
+│   │   ├── useCommandExecutor.test.tsx
+│   │   ├── useTerminalHistory.test.ts
+│   │   └── useTheme.test.ts
+│   └── components/
+│       ├── CommandLine.test.tsx
+│       └── TerminalOutput.test.tsx
+│
 ├── commands/          # One file per command group
 │   ├── portfolio.tsx  # about, skills, projects, experience, resume, contact, blog
 │   ├── help.tsx       # help
@@ -82,9 +98,9 @@ src/
 │   └── useActiveEffect.ts      # currentEffect state
 │
 ├── data/
-│   ├── portfolioData.ts  # All portfolio content
+│   ├── portfolioData.ts    # All portfolio content
 │   ├── commandRegistry.ts  # Single source of truth for all commands
-│   └── staticData.ts     # Visual effects list
+│   └── staticData.ts       # Visual effects list
 │
 ├── themes/
 │   └── themes.ts  # themeNames array + ThemeName type + defaultTheme
@@ -121,7 +137,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 npm run build
 ```
 
-Output is written to `build/`.
+Output is written to `dist/`.
 
 ---
 
@@ -160,6 +176,20 @@ Place your resume PDF in the `public/` folder and update `resume.filePath` accor
 2. Add a new entry to `AVAILABLE_EFFECTS` in `src/data/staticData.ts` with `status: "done"`
 3. Add a conditional render in `Terminal.tsx` for the new effect name
 4. Set `status: "planning"` while in development — the UI will show it as "under development" and prevent activation
+
+---
+
+## Testing
+
+The project uses [Vitest](https://vitest.dev) + [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+```bash
+npm run test            # run all tests once
+npm run test:watch      # watch mode (re-runs on file save)
+npm run test:coverage   # generate coverage report in coverage/
+```
+
+148 tests across 10 files covering command renderers, custom hooks, and UI components.
 
 ---
 
