@@ -8,6 +8,12 @@ dist/
 # Vite cache
 .vite/
 
+# Test coverage output
+coverage/
+
+# Linter cache
+.eslintcache
+
 # Environment variables
 .env
 .env.local
@@ -25,6 +31,9 @@ Thumbs.db
 # Editor directories
 .vscode/
 .idea/
+
+# Claude Code
+.claude/
 
 # TypeScript cache
 *.tsbuildinfo

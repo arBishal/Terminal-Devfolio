@@ -40,7 +40,9 @@ A fully interactive, terminal-style developer portfolio built with React, TypeSc
 | `clear` | Clear terminal output |
 | `history` | Show command history |
 
-Hidden / easter-egg commands: `ls`, `pwd`, `whoami`, `date`, `sudo`, `hack`, `echo`, `cat`, `hello`, `exit`, `hide`, `show`, and more.
+Hidden / easter-egg commands: `ls`, `pwd`, `whoami`, `date`, `sudo`, `hack`, `hello`, `exit`, `hide`, `show`, and more.
+
+`echo <text>` echoes the text back. `cat <filename>` reads a virtual file (e.g. `cat about.txt`, `cat experience.log`, `cat resume.pdf`).
 
 ---
 
@@ -59,6 +61,22 @@ Hidden / easter-egg commands: `ls`, `pwd`, `whoami`, `date`, `sudo`, `hack`, `ec
 
 ```
 src/
+├── __tests__/
+│   ├── setup.ts                         # jest-dom matchers + jsdom stubs
+│   ├── commands/
+│   │   ├── help.test.tsx
+│   │   ├── misc.test.tsx
+│   │   ├── portfolio.test.tsx
+│   │   └── visuals.test.tsx
+│   ├── hooks/
+│   │   ├── useActiveEffect.test.ts
+│   │   ├── useCommandExecutor.test.tsx
+│   │   ├── useTerminalHistory.test.ts
+│   │   └── useTheme.test.ts
+│   └── components/
+│       ├── CommandLine.test.tsx
+│       └── TerminalOutput.test.tsx
+│
 ├── commands/          # One file per command group
 │   ├── portfolio.tsx  # about, skills, projects, experience, resume, contact, blog
 │   ├── help.tsx       # help
@@ -74,16 +92,21 @@ src/
 │   └── FirefliesCanvas.tsx # Canvas-based firefly ambient animation
 │
 ├── hooks/
-│   └── useCommandExecutor.tsx  # Thin dispatcher — routes input to command renderers
+│   ├── useCommandExecutor.tsx  # Composes sub-hooks, owns command dispatch
+│   ├── useTerminalHistory.ts   # history, commandHistory, historyIndex state
+│   ├── useTheme.ts             # currentThemeName state
+│   └── useActiveEffect.ts      # currentEffect state
 │
 ├── data/
-│   └── data.ts   # All portfolio content
+│   ├── portfolioData.ts    # All portfolio content
+│   ├── commandRegistry.ts  # Single source of truth for all commands
+│   └── staticData.ts       # Visual effects list
 │
 ├── themes/
-│   └── themes.ts  # Theme name constants
+│   └── themes.ts  # themeNames array + ThemeName type + defaultTheme
 │
-├── types/
-│   └── terminal.ts  # OutputLine, ThemeName
+├── utils/
+│   └── download.ts  # Generic file download utility
 │
 └── index.css   # CSS custom-property theme variables + utility classes
 ```
@@ -114,13 +137,13 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 npm run build
 ```
 
-Output is written to `build/`.
+Output is written to `dist/`.
 
 ---
 
 ## Customisation
 
-**All content is in one place:** [`src/data/data.ts`](src/data/data.ts)
+**All content is in one place:** [`src/data/portfolioData.ts`](src/data/portfolioData.ts)
 
 Update the exported `portfolioData` object:
 
@@ -144,15 +167,29 @@ Place your resume PDF in the `public/` folder and update `resume.filePath` accor
 ### Adding a new command
 
 1. Create or update a renderer function in `src/commands/`
-2. Add a `case` for it in the `switch` block in `src/hooks/useCommandExecutor.tsx`
-3. Optionally add it to `portfolioData.commands` in `data.ts` to surface it in the help/welcome screen
+2. Add an entry to `commandMap` in `src/hooks/useCommandExecutor.tsx`
+3. Add it to `COMMAND_REGISTRY` in `src/data/commandRegistry.ts` to surface it in autocomplete, help, and the welcome screen
 
 ### Adding a new visual effect
 
 1. Create a canvas component in `src/components/` (see `FirefliesCanvas.tsx` as a reference)
-2. Add a new entry to `AVAILABLE_EFFECTS` in `src/data/data.ts` with `status: "done"`
+2. Add a new entry to `AVAILABLE_EFFECTS` in `src/data/staticData.ts` with `status: "done"`
 3. Add a conditional render in `Terminal.tsx` for the new effect name
 4. Set `status: "planning"` while in development — the UI will show it as "under development" and prevent activation
+
+---
+
+## Testing
+
+The project uses [Vitest](https://vitest.dev) + [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+```bash
+npm run test            # run all tests once
+npm run test:watch      # watch mode (re-runs on file save)
+npm run test:coverage   # generate coverage report in coverage/
+```
+
+148 tests across 10 files covering command renderers, custom hooks, and UI components.
 
 ---
 

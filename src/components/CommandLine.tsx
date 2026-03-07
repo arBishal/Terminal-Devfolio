@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { COMMANDS } from "@/data/staticData";
+import { ALL_COMMAND_NAMES } from "@/data/commandRegistry";
 
 interface CommandLineProps {
   onExecute: (command: string) => void;
@@ -9,22 +9,6 @@ interface CommandLineProps {
   onFocusChange: (focused: boolean) => void;
 }
 
-// All commands the executor handles — public + hidden + easter eggs.
-// Used for autocomplete so every valid command is discoverable via Tab.
-const AVAILABLE_COMMANDS = [
-  // Public (shown in help / welcome screen)
-  ...COMMANDS.map((c) => c.name),
-  // Hidden
-  "hide", "show",
-  // Easter eggs / unix-style
-  "ls", "ls -la", "ls -l", "pwd", "whoami", "date",
-  "sudo", "sudo rm -rf /", "rm -rf /",
-  "hack", "hack the planet",
-  "exit", "quit",
-  "hello", "hi",
-  "history",
-  "cat", "echo",
-].sort();
 
 export function CommandLine({
   onExecute,
@@ -111,7 +95,7 @@ export function CommandLine({
 
     // Autocomplete suggestions
     if (value.trim()) {
-      const matches = AVAILABLE_COMMANDS.filter((cmd) =>
+      const matches = ALL_COMMAND_NAMES.filter((cmd) =>
         cmd.startsWith(value.toLowerCase()),
       );
       setSuggestions(matches);

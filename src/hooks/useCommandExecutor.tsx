@@ -1,13 +1,14 @@
-import { useState, useCallback, useRef } from "react";
-import type { OutputLine, ThemeName } from "@/types/terminal";
-import { themeNames, defaultTheme } from "@/themes/themes";
-import { portfolioData } from "@/data/portfolioData";
+import { useCallback } from "react";
+import { themeNames } from "@/themes/themes";
+import type { ThemeName } from "@/themes/themes";
 
 // Command renderers
 import {
   renderAbout, renderSkills, renderProjects, renderExperience,
-  renderResume, triggerResumeDownload, renderContact, renderBlog,
-} from "../commands/portfolio";
+  renderResume, renderContact, renderBlog,
+} from "@/commands/portfolio";
+import { downloadFile } from "@/utils/download";
+import { portfolioData } from "@/data/portfolioData";
 import { renderHelp } from "@/commands/help";
 import { renderThemeList, renderFunList } from "@/commands/visuals";
 import { AVAILABLE_EFFECTS } from "@/data/staticData";
@@ -16,8 +17,21 @@ import {
   renderHack, renderExit, renderHello, renderHistory, renderCat, renderEcho,
 } from "@/commands/misc";
 
-// Hoisted regex — avoids recreation on every command execution (js-hoist-regexp)
+import { useTerminalHistory } from "./useTerminalHistory";
+import { useTheme } from "./useTheme";
+import { useActiveEffect } from "./useActiveEffect";
+
+export interface OutputLine {
+  type: "command" | "result" | "error";
+  content: React.ReactNode;
+}
+
+// Hoisted regex — avoids recreation on every command execution
 const WHITESPACE_RE = /\s+/;
+
+// Maximum number of output lines kept in memory.
+// Oldest lines are trimmed when the limit is exceeded.
+const MAX_HISTORY = 400;
 
 export interface CommandExecutorOptions {
   setIsCommandsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -35,44 +49,39 @@ export interface CommandExecutor {
 }
 
 /**
- * Central command-execution hook. Owns all terminal state (history, theme,
- * effect) and exposes a stable `executeCommand` callback for the UI.
- *
- * State that the callback reads at dispatch time (currentEffect, currentThemeName)
- * is mirrored into refs so the callback never needs to be re-created.
+ * Composes useTerminalHistory, useTheme, and useActiveEffect into a single
+ * interface and wires up the command executor. Each sub-hook owns its
+ * own state slice; this hook owns only the dispatch logic.
  */
 export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions): CommandExecutor {
-  const [history, setHistory] = useState<OutputLine[]>([]);
-  const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentThemeName, setCurrentThemeName] = useState<ThemeName>(defaultTheme);
-  const [currentEffect, setCurrentEffect] = useState<string | null>(null);
+  const {
+    history, setHistory,
+    commandHistory, commandHistoryRef, setCommandHistory,
+    historyIndex, setHistoryIndex,
+  } = useTerminalHistory();
 
-  // Refs mirror state so executeCommand can read latest values
-  // without needing them as useCallback dependencies (rerender-functional-setstate)
-  const currentEffectRef = useRef(currentEffect);
-  currentEffectRef.current = currentEffect;
-  const currentThemeNameRef = useRef(currentThemeName);
-  currentThemeNameRef.current = currentThemeName;
+  const { currentThemeName, currentThemeNameRef, setCurrentThemeName } = useTheme();
+  const { currentEffect, currentEffectRef, setCurrentEffect, clearEffect } = useActiveEffect();
 
   const executeCommand = useCallback((cmd: string) => {
-    /** Append a single output line to the terminal history. */
     function push(type: OutputLine["type"], content: OutputLine["content"]) {
-      setHistory((prev) => [...prev, { type, content }]);
+      setHistory((prev) => {
+        const next = [...prev, { type, content }];
+        return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
+      });
     }
 
     const trimmedCmd = cmd.trim().toLowerCase();
     if (trimmedCmd === "") return;
 
-    // Record the raw command for display + ↑/↓ navigation, then reset index
-    setHistory((prev) => [
-      ...prev,
-      { type: "command", content: cmd },
-    ]);
+    setHistory((prev) => {
+      const next = [...prev, { type: "command", content: cmd }];
+      return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
+    });
     setCommandHistory((prev) => [...prev, cmd]);
     setHistoryIndex(-1);
 
-    // ── Subcommand routing (must come before switch) ──────────────────────────
+    // ── Prefix handlers for parameterized subcommands ─────────────────────────
     if (trimmedCmd.startsWith("theme ")) {
       const name = trimmedCmd.slice(6).trim() as ThemeName;
       if (themeNames.includes(name)) {
@@ -84,17 +93,11 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       return;
     }
 
-    // ── fun <effect> [clear] ─────────────────────────────────────────────────
-    //  Three-way dispatch:
-    //    1. "fun <effect> clear"  → remove the active effect
-    //    2. "fun <effect>" (done) → activate or warn if already active
-    //    3. "fun <effect>" (else) → show under-development message
     if (trimmedCmd.startsWith("fun ")) {
       const args = trimmedCmd.slice(4).trim().split(WHITESPACE_RE);
       const name = args[0];
       const subCmd = args[1];
 
-      // fun <effect> clear
       if (subCmd === "clear") {
         if (currentEffectRef.current === name) {
           setCurrentEffect(null);
@@ -123,45 +126,80 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       return;
     }
 
+    // ── echo <text> ──────────────────────────────────────────────────────────
+    if (trimmedCmd.startsWith("echo ")) {
+      const text = cmd.trim().slice(5); // slice from original to preserve casing
+      push("result", renderEcho(text));
+      return;
+    }
+
+    // ── cat <filename> ───────────────────────────────────────────────────────
+    if (trimmedCmd.startsWith("cat ")) {
+      const filename = trimmedCmd.slice(4).trim();
+      const fileRoutes: Record<string, () => void> = {
+        "about.txt":      () => push("result", renderAbout()),
+        "contact.txt":    () => push("result", renderContact()),
+        "experience.log": () => push("result", renderExperience()),
+        "resume.pdf":     () => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); push("result", renderResume()); },
+      };
+      const handler = fileRoutes[filename];
+      if (handler) {
+        handler();
+      } else if (filename === "skills/" || filename === "projects/") {
+        push("error", `cat: ${filename}: Is a directory`);
+      } else {
+        push("error", renderCat(filename));
+      }
+      return;
+    }
+
     // ── Main command dispatch ─────────────────────────────────────────────────
-    switch (trimmedCmd) {
-      case "help": push("result", renderHelp()); break;
-      case "about": push("result", renderAbout()); break;
-      case "skills": push("result", renderSkills()); break;
-      case "projects": push("result", renderProjects()); break;
-      case "experience": push("result", renderExperience()); break;
-      case "resume": triggerResumeDownload(); push("result", renderResume()); break;
-      case "contact": push("result", renderContact()); break;
-      case "blog": push("result", renderBlog()); break;
-      case "theme": push("result", renderThemeList(currentThemeNameRef.current, executeCommand)); break;
-      case "fun": push("result", renderFunList(currentEffectRef.current, executeCommand)); break;
-      case "clear": setHistory([]); return; // wipe history; return skips pushing the "clear" command itself
-      case "hide": setIsCommandsOpen(false); push("result", <p className="theme-muted">Commands hidden. Type <span className="theme-accent">show</span> to bring them back.</p>); break;
-      case "show": setIsCommandsOpen(true); push("result", <p className="theme-muted">Commands visible.</p>); break;
-      case "ls":
-      case "ls -la":
-      case "ls -l": push("result", renderLs()); break;
-      case "pwd": push("result", renderPwd()); break;
-      case "whoami": push("result", renderWhoami()); break;
-      case "date": push("result", renderDate()); break;
-      case "sudo":
-      case "sudo rm -rf /":
-      case "rm -rf /": push("error", renderSudo()); break;
-      case "hack":
-      case "hack the planet": push("result", renderHack()); break;
-      case "exit":
-      case "quit": push("result", renderExit()); break;
-      case "hello":
-      case "hi": push("result", renderHello()); break;
-      case "history": push("result", renderHistory(commandHistory)); break;
-      case "cat": push("error", renderCat()); break;
-      case "echo": push("result", renderEcho()); break;
-      default: push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
+    const commandMap: Record<string, () => void> = {
+      // Portfolio
+      "help":              () => push("result", renderHelp()),
+      "about":             () => push("result", renderAbout()),
+      "skills":            () => push("result", renderSkills()),
+      "projects":          () => push("result", renderProjects()),
+      "experience":        () => push("result", renderExperience()),
+      "resume":            () => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); push("result", renderResume()); },
+      "contact":           () => push("result", renderContact()),
+      "blog":              () => push("result", renderBlog()),
+      // Visuals
+      "theme":             () => push("result", renderThemeList(currentThemeNameRef.current, executeCommand)),
+      "fun":               () => push("result", renderFunList(currentEffectRef.current, executeCommand)),
+      // Terminal control
+      "clear":             () => setHistory([]),
+      "hide":              () => { setIsCommandsOpen(false); push("result", <p className="theme-muted">Commands hidden. Type <span className="theme-accent">show</span> to bring them back.</p>); },
+      "show":              () => { setIsCommandsOpen(true); push("result", <p className="theme-muted">Commands visible.</p>); },
+      // Unix-style / easter eggs
+      "ls":                () => push("result", renderLs()),
+      "ls -la":            () => push("result", renderLs()),
+      "ls -l":             () => push("result", renderLs()),
+      "pwd":               () => push("result", renderPwd()),
+      "whoami":            () => push("result", renderWhoami()),
+      "date":              () => push("result", renderDate()),
+      "sudo":              () => push("error", renderSudo()),
+      "sudo rm -rf /":     () => push("error", renderSudo()),
+      "rm -rf /":          () => push("error", renderSudo()),
+      "hack":              () => push("result", renderHack()),
+      "hack the planet":   () => push("result", renderHack()),
+      "exit":              () => push("result", renderExit()),
+      "quit":              () => push("result", renderExit()),
+      "hello":             () => push("result", renderHello()),
+      "hi":                () => push("result", renderHello()),
+      "history":           () => push("result", renderHistory(commandHistoryRef.current)),
+      "cat":               () => push("error", renderCat()),
+      "echo":              () => push("result", renderEcho()),
+    };
+
+    const handler = commandMap[trimmedCmd];
+    if (handler) {
+      handler();
+    } else {
+      push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const clearEffect = useCallback(() => setCurrentEffect(null), []);
 
   return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, clearEffect, executeCommand };
 }

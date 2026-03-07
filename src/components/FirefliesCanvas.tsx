@@ -140,12 +140,17 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        // Size canvas to viewport
+        // Size canvas to viewport — debounced to avoid thrashing during resize
+        let resizeTimer: ReturnType<typeof setTimeout>;
         const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }, 150);
         };
-        resize();
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         window.addEventListener("resize", resize);
 
         // Spawn fireflies
@@ -161,6 +166,7 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
 
         return () => {
             window.removeEventListener("resize", resize);
+            clearTimeout(resizeTimer);
             cancelAnimationFrame(animFrameRef.current);
         };
     }, [animate]);
