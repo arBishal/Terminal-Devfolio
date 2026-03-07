@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useTheme } from '@/hooks/useTheme';
-import { defaultTheme } from '@/themes/themes';
+import { defaultTheme, themeNames } from '@/themes/themes';
 
 describe('useTheme', () => {
     it('initialises with the default theme', () => {
@@ -25,15 +25,14 @@ describe('useTheme', () => {
     it('currentThemeNameRef stays in sync after theme change', () => {
         const { result } = renderHook(() => useTheme());
         act(() => {
-            result.current.setCurrentThemeName('ubuntu');
+            result.current.setCurrentThemeName('ubuntu-gnome');
         });
-        expect(result.current.currentThemeNameRef.current).toBe('ubuntu');
+        expect(result.current.currentThemeNameRef.current).toBe('ubuntu-gnome');
     });
 
     it('accepts all valid theme names without type errors', () => {
         const { result } = renderHook(() => useTheme());
-        const themes = ['dark', 'light', 'ubuntu'] as const;
-        for (const theme of themes) {
+        for (const theme of themeNames) {
             act(() => {
                 result.current.setCurrentThemeName(theme);
             });

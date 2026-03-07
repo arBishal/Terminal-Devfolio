@@ -18,15 +18,15 @@ export function TerminalOutput({ history }: TerminalOutputProps) {
         <div key={index}>
           {line.type === "command" && (
             <div data-cmd className="flex items-center gap-2">
-              <span className="theme-accent">guest@portfolio:~$</span>
-              <span className="theme-accent">{line.content}</span>
+              <span className="text-t-accent">guest@portfolio:~$</span>
+              <span className="text-t-accent">{line.content}</span>
             </div>
           )}
           {line.type === "result" && (
-            <div className="theme-text pl-0">{line.content}</div>
+            <div className="text-t-text pl-0">{line.content}</div>
           )}
           {line.type === "error" && (
-            <div className="theme-error pl-0">{line.content}</div>
+            <div className="text-t-error pl-0">{line.content}</div>
           )}
         </div>
       ))

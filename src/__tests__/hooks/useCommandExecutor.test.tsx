@@ -140,10 +140,10 @@ describe('useCommandExecutor — theme prefix', () => {
         expect(result.current.currentThemeName).toBe('light');
     });
 
-    it('changes theme to "ubuntu"', () => {
+    it('changes theme to "ubuntu-gnome"', () => {
         const { result } = setup();
-        run(result, 'theme ubuntu');
-        expect(result.current.currentThemeName).toBe('ubuntu');
+        run(result, 'theme ubuntu-gnome');
+        expect(result.current.currentThemeName).toBe('ubuntu-gnome');
     });
 
     it('pushes a result entry on valid theme change', () => {

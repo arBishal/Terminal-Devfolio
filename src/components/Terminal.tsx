@@ -77,13 +77,13 @@ export function Terminal() {
     return (
       <div
         data-theme={currentThemeName}
-        className="theme-bg theme-text font-mono min-h-dvh h-dvh flex items-center justify-center"
+        className="bg-t-bg text-t-text font-mono min-h-dvh h-dvh flex items-center justify-center"
       >
         <div className="text-center space-y-4">
-          <p className="theme-text text-xl">Terminal closed</p>
+          <p className="text-t-text text-xl">Terminal closed</p>
           <button
             onClick={() => setIsClosed(false)}
-            className="px-4 py-2 theme-accent-bg rounded hover:opacity-80 transition-colors"
+            className="px-4 py-2 bg-t-accent text-t-btn-text rounded hover:opacity-80 transition-colors"
           >
             Reopen Terminal
           </button>
@@ -93,7 +93,7 @@ export function Terminal() {
   }
 
   return (
-    <div data-theme={currentThemeName} className="theme-bg theme-text font-mono min-h-dvh">
+    <div data-theme={currentThemeName} className="bg-t-bg text-t-text font-mono min-h-dvh">
       {currentEffect === "fireflies" && <FirefliesCanvas onComplete={clearEffect} />}
       <div className="h-dvh flex flex-col">
         <TerminalHeader onClose={() => setIsClosed(true)} />
@@ -110,7 +110,7 @@ export function Terminal() {
           role="log"
           aria-label="Terminal output"
           aria-live="polite"
-          className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-black theme-bg"
+          className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-black bg-t-bg"
         >
           <TerminalOutput history={history} />
           <CommandLine
@@ -123,7 +123,7 @@ export function Terminal() {
         </div>
 
         {/* Footer */}
-        <div className="py-2 text-center theme-muted text-sm theme-bg border-t theme-border flex-shrink-0">
+        <div className="py-2 text-center text-t-muted text-sm bg-t-bg border-t border-t-border flex-shrink-0">
           {/* Desktop tip */}
           <p className="hidden [@media(pointer:fine)]:block">
             Tip: ↑/↓ to navigate history • Tab for autocomplete

@@ -86,7 +86,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       const name = trimmedCmd.slice(6).trim() as ThemeName;
       if (themeNames.includes(name)) {
         setCurrentThemeName(name);
-        push("result", <p className="theme-accent">✓ Theme changed to &apos;{name}&apos;</p>);
+        push("result", <p className="text-t-accent">✓ Theme changed to &apos;{name}&apos;</p>);
       } else {
         push("error", `Theme '${name}' not found. Available: ${themeNames.join(", ")}`);
       }
@@ -101,7 +101,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       if (subCmd === "clear") {
         if (currentEffectRef.current === name) {
           setCurrentEffect(null);
-          push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; cleared.</p>);
+          push("result", <p className="text-t-accent">✓ Effect &apos;{name}&apos; cleared.</p>);
         } else {
           push("error", `Effect '${name}' is not currently active.`);
         }
@@ -112,13 +112,13 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       if (effect) {
         if (effect.status === "done") {
           if (currentEffectRef.current === name) {
-            push("result", <p className="theme-muted">Effect &apos;{name}&apos; is already active. To clear it, run: <span className="theme-accent">fun {name} clear</span></p>);
+            push("result", <p className="text-t-muted">Effect &apos;{name}&apos; is already active. To clear it, run: <span className="text-t-accent">fun {name} clear</span></p>);
           } else {
             setCurrentEffect(name);
-            push("result", <p className="theme-accent">✓ Effect &apos;{name}&apos; activated!</p>);
+            push("result", <p className="text-t-accent">✓ Effect &apos;{name}&apos; activated!</p>);
           }
         } else {
-          push("result", <p className="theme-muted">Effect &apos;{name}&apos; is under development.</p>);
+          push("result", <p className="text-t-muted">Effect &apos;{name}&apos; is under development.</p>);
         }
       } else {
         push("error", `Effect '${name}' not found. Available: ${AVAILABLE_EFFECTS.map(e => e.name).join(", ")}`);
@@ -169,8 +169,8 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       "fun":               () => push("result", renderFunList(currentEffectRef.current, executeCommand)),
       // Terminal control
       "clear":             () => setHistory([]),
-      "hide":              () => { setIsCommandsOpen(false); push("result", <p className="theme-muted">Commands hidden. Type <span className="theme-accent">show</span> to bring them back.</p>); },
-      "show":              () => { setIsCommandsOpen(true); push("result", <p className="theme-muted">Commands visible.</p>); },
+      "hide":              () => { setIsCommandsOpen(false); push("result", <p className="text-t-muted">Commands hidden. Type <span className="text-t-accent">show</span> to bring them back.</p>); },
+      "show":              () => { setIsCommandsOpen(true); push("result", <p className="text-t-muted">Commands visible.</p>); },
       // Unix-style / easter eggs
       "ls":                () => push("result", renderLs()),
       "ls -la":            () => push("result", renderLs()),

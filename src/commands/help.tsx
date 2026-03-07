@@ -12,12 +12,12 @@ const SORTED_COMMANDS = [...COMMANDS].sort((a, b) =>
 export function renderHelp() {
     return (
         <div className="space-y-2">
-            <p className="theme-warning">Available commands:</p>
+            <p className="text-t-warning">Available commands:</p>
             <div className="pl-4 grid grid-cols-1 md:grid-cols-2">
                 {SORTED_COMMANDS.map((cmd) => (
                     <div key={cmd.name}>
-                        <span className="theme-accent">{cmd.name}</span>
-                        <span className="theme-muted"> — {cmd.description}</span>
+                        <span className="text-t-accent">{cmd.name}</span>
+                        <span className="text-t-muted"> — {cmd.description}</span>
                     </div>
                 ))}
             </div>
