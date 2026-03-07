@@ -24,9 +24,9 @@ describe('renderThemeList', () => {
     });
 
     it('shows "(current)" next to the correct theme', () => {
-        renderOutput(renderThemeList('ubuntu', vi.fn()));
-        const ubuntuButton = screen.getByRole('button', { name: 'ubuntu' });
-        // The "(current)" span is a sibling of the ubuntu button
+        renderOutput(renderThemeList('ubuntu-gnome', vi.fn()));
+        const ubuntuButton = screen.getByRole('button', { name: 'ubuntu-gnome' });
+        // The "(current)" span is a sibling of the ubuntu-gnome button
         const parent = ubuntuButton.parentElement!;
         expect(parent).toHaveTextContent('(current)');
     });

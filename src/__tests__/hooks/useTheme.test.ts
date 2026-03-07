@@ -25,9 +25,9 @@ describe('useTheme', () => {
     it('currentThemeNameRef stays in sync after theme change', () => {
         const { result } = renderHook(() => useTheme());
         act(() => {
-            result.current.setCurrentThemeName('ubuntu');
+            result.current.setCurrentThemeName('ubuntu-gnome');
         });
-        expect(result.current.currentThemeNameRef.current).toBe('ubuntu');
+        expect(result.current.currentThemeNameRef.current).toBe('ubuntu-gnome');
     });
 
     it('accepts all valid theme names without type errors', () => {
