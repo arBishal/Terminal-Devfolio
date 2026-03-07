@@ -1,4 +1,4 @@
-import { COMMANDS } from "@/data/staticData";
+import { COMMANDS } from "@/data/commandRegistry";
 
 // Pre-sorted at module scope — portfolioData is static, no need to re-sort per call
 const SORTED_COMMANDS = [...COMMANDS].sort((a, b) =>

@@ -107,6 +107,9 @@ export function Terminal() {
         {/* Scrollable terminal body */}
         <div
           ref={terminalRef}
+          role="log"
+          aria-label="Terminal output"
+          aria-live="polite"
           className="p-4 flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-black theme-bg"
         >
           <TerminalOutput history={history} />

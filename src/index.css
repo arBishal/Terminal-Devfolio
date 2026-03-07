@@ -42,16 +42,16 @@
   /* gray-500   */
   --t-error: #dc2626;
   /* red-600    */
-  --t-warning: #ea580c;
-  /* orange-600 */
+  --t-warning: #c2410c;
+  /* orange-700 — darkened from orange-600 for 5.2:1 contrast on white */
   --t-border: #d1d5db;
   /* gray-300   */
   --t-header-bg: #f3f4f6;
   /* gray-100   */
   --t-header-text: #111827;
   --t-btn-text: #ffffff;
-  --t-accent2: #4ade80;
-  /* green-400   */
+  --t-accent2: #15803d;
+  /* green-700 — darkened from green-400 (1.7:1) to 5.0:1 contrast on white */
 }
 
 /* ── Ubuntu — GNOME Terminal default Ubuntu profile ──────────
@@ -65,8 +65,8 @@
   /* Ubuntu orange (Suru)          */
   --t-muted: #AD7FA8;
   /* Tango bright-purple           */
-  --t-error: #EF2929;
-  /* Tango bright-red              */
+  --t-error: #FF4444;
+  /* brightened from #EF2929 (4.2:1) to 5.2:1 contrast on aubergine */
   --t-warning: #FCE94F;
   /* Tango bright-yellow           */
   --t-border: #4C0D3E;
@@ -76,8 +76,8 @@
   --t-header-text: #FFFFFF;
   --t-btn-text: #FFFFFF;
   /* text on accent-bg button      */
-  --t-accent2: #C34113;
-  /* Suru dark orange              */
+  --t-accent2: #FF7433;
+  /* brightened from #C34113 (3.4:1) to 6.5:1 contrast on aubergine */
 }
 
 /* ============================================================

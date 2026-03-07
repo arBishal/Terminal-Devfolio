@@ -1,5 +1,5 @@
-import type { ThemeName } from "../types/terminal";
+export const themeNames = ["dark", "light", "ubuntu"] as const;
 
-export const themeNames: ThemeName[] = ["dark", "light", "ubuntu"];
+export type ThemeName = typeof themeNames[number];
 
 export const defaultTheme: ThemeName = "dark";

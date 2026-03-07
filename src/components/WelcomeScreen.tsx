@@ -1,5 +1,5 @@
 import { portfolioData } from "@/data/portfolioData";
-import { COMMANDS } from "@/data/staticData";
+import { COMMANDS } from "@/data/commandRegistry";
 import { asciiArt } from "@/data/asciiArt";
 
 const SORTED_COMMANDS = [...COMMANDS].sort((a, b) =>

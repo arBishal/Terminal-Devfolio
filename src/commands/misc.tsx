@@ -83,10 +83,16 @@ export function renderHistory(commandHistory: string[]) {
     );
 }
 
-export function renderCat() {
-    return "cat: missing file operand. Try 'cat about.txt' or just use the 'about' command!";
+export function renderCat(filename?: string) {
+    if (!filename) {
+        return "cat: missing file operand. Try 'cat about.txt' or just use the 'about' command!";
+    }
+    return `cat: ${filename}: No such file or directory`;
 }
 
-export function renderEcho() {
-    return <p className="theme-text">Echo... echo... echo... 🔊</p>;
+export function renderEcho(text?: string) {
+    if (!text) {
+        return <p className="theme-text">Echo... echo... echo... 🔊</p>;
+    }
+    return <p className="theme-text">{text}</p>;
 }

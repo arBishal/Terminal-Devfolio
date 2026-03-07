@@ -212,12 +212,12 @@ Shows the ASCII art banner and a clickable grid of commands when the terminal fi
 
 ```tsx
 // ✅ Outside the component — runs once when the module loads
-const SORTED_COMMANDS = [...portfolioData.commands].sort(...);
+const SORTED_COMMANDS = [...COMMANDS].sort(...);  // COMMANDS from commandRegistry
 
 function WelcomeScreen() { ... }  // SORTED_COMMANDS never re-sorted
 ```
 
-If sorting were inside the component, it would re-run on every render. Since `portfolioData` is a constant, the result never changes — so we sort once.
+If sorting were inside the component, it would re-run on every render. Since `COMMANDS` is a module-level constant, the result never changes — so we sort once.
 
 ### Collapsible panel
 
@@ -322,43 +322,55 @@ This mimics a real terminal where the cursor is always blinking.
 
 ## 10. `useCommandExecutor` — the brain
 
-This custom hook centralises all command-execution logic. It lives in `src/hooks/useCommandExecutor.tsx`.
+`useCommandExecutor` lives in `src/hooks/useCommandExecutor.tsx`. Rather than owning all state directly, it **composes three focused sub-hooks** and owns only the dispatch logic.
 
 ### What is a custom hook?
 
 A React hook is a JavaScript function whose name starts with `use`. It can call other hooks (`useState`, `useEffect`, etc.) and return anything. Components call it to get state and functions without cluttering the component itself.
 
-### State inside the hook
+### Sub-hook composition
+
+State is split across three single-responsibility hooks:
+
+| Hook | File | Owns |
+|---|---|---|
+| `useTerminalHistory` | `hooks/useTerminalHistory.ts` | `history`, `commandHistory`, `historyIndex` |
+| `useTheme` | `hooks/useTheme.ts` | `currentThemeName` |
+| `useActiveEffect` | `hooks/useActiveEffect.ts` | `currentEffect`, `clearEffect` |
+
+`useCommandExecutor` calls all three and wires up `executeCommand`:
 
 ```tsx
-const [history, setHistory] = useState<OutputLine[]>([]);        // rendered output
-const [commandHistory, setCommandHistory] = useState<string[]>([]);  // for ↑/↓
-const [historyIndex, setHistoryIndex] = useState(-1);
-const [currentThemeName, setCurrentThemeName] = useState<ThemeName>("dark");
-const [currentEffect, setCurrentEffect] = useState<string | null>(null);
+export function useCommandExecutor({ setIsCommandsOpen }) {
+  const { history, setHistory, commandHistory, commandHistoryRef, ... } = useTerminalHistory();
+  const { currentThemeName, currentThemeNameRef, setCurrentThemeName } = useTheme();
+  const { currentEffect, currentEffectRef, setCurrentEffect, clearEffect } = useActiveEffect();
+
+  const executeCommand = useCallback((cmd) => { ... }, []);
+
+  return { history, commandHistory, historyIndex, setHistoryIndex,
+           currentThemeName, currentEffect, clearEffect, executeCommand };
+}
 ```
 
 ### Stable callbacks via refs
 
-`executeCommand` reads `currentEffect` and `currentThemeName` to decide what to display. Normally this would require them as `useCallback` dependencies, causing the function to be re-created on every state change. Instead, refs mirror the state:
+Each sub-hook mirrors its state into a ref so `executeCommand` can read the latest value without needing it as a `useCallback` dependency:
 
 ```tsx
-const currentEffectRef = useRef(currentEffect);
-currentEffectRef.current = currentEffect;
+// Inside useTheme:
 const currentThemeNameRef = useRef(currentThemeName);
-currentThemeNameRef.current = currentThemeName;
+currentThemeNameRef.current = currentThemeName;  // updated every render
 
-const executeCommand = useCallback((cmd: string) => {
-  // reads currentEffectRef.current instead of currentEffect
-  // → no dependency needed → stable function identity
-}, []);
+// Inside executeCommand (useCallback with [] deps):
+// reads currentThemeNameRef.current — always fresh, no dependency needed
 ```
 
-This is the [Vercel `rerender-functional-setstate` best practice](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) — stable callback references prevent unnecessary re-renders of child components.
+This pattern — used for `currentThemeNameRef`, `currentEffectRef`, and `commandHistoryRef` — keeps `executeCommand`'s identity stable, preventing unnecessary re-renders of child components.
 
 ### The `push` helper
 
-Defined at the top of `executeCommand` so it's always available:
+Defined at the top of `executeCommand`:
 
 ```tsx
 function push(type: OutputLine["type"], content: OutputLine["content"]) {
@@ -373,32 +385,38 @@ function push(type: OutputLine["type"], content: OutputLine["content"]) {
 When the user presses Enter, `executeCommand(cmd)` is called:
 
 1. Record the command in both `history` (for display) and `commandHistory` (for ↑/↓)
-2. Check for subcommands first (`theme dark`, `fun rain`) — these need the extra argument
-3. Route to the matching `case` in the `switch` statement:
+2. Run prefix handlers for parameterized subcommands (`theme <name>`, `fun <effect>`, `echo <text>`, `cat <file>`) — these parse arguments from the command string, then `return`
+3. Look up the trimmed command in `commandMap`:
 
 ```tsx
-switch (trimmedCmd) {
-  case "about":    push("result", renderAbout()); break;
-  case "skills":   push("result", renderSkills()); break;
-  case "resume":   triggerResumeDownload(); push("result", renderResume()); break;
-  case "clear":    setHistory([]); return;  // wipe history, skip push
+const commandMap: Record<string, () => void> = {
+  "about":   () => push("result", renderAbout()),
+  "skills":  () => push("result", renderSkills()),
+  "resume":  () => { downloadFile(...); push("result", renderResume()); },
+  "clear":   () => setHistory([]),
   // …
-  default:         push("error", `Command not found: ${cmd}`);
+};
+
+const handler = commandMap[trimmedCmd];
+if (handler) {
+  handler();
+} else {
+  push("error", `Command not found: ${cmd}`);
 }
 ```
 
-**Why `return` for `clear`?** Because we call `setHistory([])` to wipe everything, and we don't want to `push` the `clear` command itself into a now-empty history.
+Adding a new command means adding one entry to `commandMap` — no structural change to the dispatch logic.
 
 ### Side effects separated from rendering
 
-`triggerResumeDownload()` creates a hidden `<a>` tag and clicks it programmatically to trigger a file download. This is called **before** `renderResume()` because render functions should be pure (they only return JSX, no side-effects):
+`downloadFile()` (from `src/utils/download.ts`) creates a hidden `<a>` tag and clicks it programmatically to trigger a file download. This is called **before** `renderResume()` because render functions should be pure — they only return JSX, no side-effects:
 
 ```tsx
 // ✅ Correct — side effect first, then pure render
-case "resume":
-  triggerResumeDownload();        // DOM side-effect
-  push("result", renderResume()); // pure JSX
-  break;
+"resume": () => {
+  downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename);
+  push("result", renderResume());
+},
 ```
 
 ---
@@ -412,7 +430,7 @@ Each command group has its own file in `src/commands/`. They export pure functio
 | `portfolio.tsx` | about, skills, projects, experience, resume, contact, blog |
 | `help.tsx` | help |
 | `visuals.tsx` | theme, fun |
-| `misc.tsx` | ls, pwd, whoami, date, sudo, hack, exit, hello, history, cat, echo |
+| `misc.tsx` | ls, pwd, whoami, date, sudo, hack, exit, hello, history, cat [file], echo [text] |
 
 ### Why separate files?
 
@@ -452,39 +470,79 @@ Visual hierarchy used consistently across all sections:
 
 ## 12. Data Layer
 
-`src/data/data.ts` is the **single source of truth** for all content. It exports one big `portfolioData` constant.
+The data layer is split across three files, each with a distinct purpose:
+
+### `src/data/portfolioData.ts` — portfolio content
+
+The single source of truth for all personal content. Components and renderers import `portfolioData` directly. **To update the portfolio content, you only ever edit this file.**
 
 ```ts
 export const portfolioData = {
-  personal: { fullName, shortName, title, username, location, education, bio, asciiArt },
-  skills:   { programming, webStack, databases, tools, practices },
-  projects: [{ name, description, tech, link }],
+  personal:   { fullName, shortName, title, username, location, education, bio },
+  skills:     { programming, webStack, databases, tools, practices },
+  projects:   [{ name, description, tech, link }],
   experience: [{ title, company, period, achievements }],
-  contact:  { email, links, note },
-  blog:     { tagline, links },
-  resume:   { filePath, downloadFilename },
-  commands: [{ name, description }],   // shown in WelcomeScreen + help
+  contact:    { email, links, note },
+  blog:       { tagline, links },
+  resume:     { filePath, downloadFilename },
 };
 ```
 
-Components and command renderers import `portfolioData` directly. **To update the portfolio content, you only ever edit this file.**
+### `src/data/commandRegistry.ts` — command definitions
+
+The single source of truth for every command the executor handles. Drives autocomplete, the help listing, and the welcome screen grid — all from one place:
+
+```ts
+const COMMAND_REGISTRY = [
+  { name: "about",   description: "Learn about me", hidden: false },
+  { name: "ls",      hidden: true },  // easter egg — no description
+  // …
+];
+
+export const COMMANDS: CommandInfo[] = // public commands (hidden: false)
+export const ALL_COMMAND_NAMES: string[] = // every name, sorted — for autocomplete
+```
+
+Adding a command to the registry automatically surfaces it in all three places with no further changes.
+
+### `src/data/staticData.ts` — visual effects list
+
+```ts
+export const AVAILABLE_EFFECTS: EffectInfo[] = [
+  { name: "fireflies", status: "done" },
+  { name: "rain",      status: "planning" },
+];
+```
 
 ---
 
 ## 13. Types
 
-`src/types/terminal.ts` contains shared TypeScript types:
+Types live where they are defined, not in a separate `types/` folder:
+
+### `OutputLine` — `src/hooks/useCommandExecutor.tsx`
+
+Defined alongside the hook that produces it:
 
 ```ts
 export interface OutputLine {
   type: "command" | "result" | "error";
-  content: string | JSX.Element;
+  content: React.ReactNode;
 }
-
-export type ThemeName = "dark" | "light" | "ubuntu";
 ```
 
-TypeScript uses these to catch mistakes at compile time. If you accidentally write `push("typo", ...)`, TypeScript will error before the code even runs.
+`React.ReactNode` is the correct type for anything React can render — strings, elements, fragments, null. `TerminalOutput.tsx` imports this type from the hook.
+
+### `ThemeName` — `src/themes/themes.ts`
+
+Derived from the `themeNames` array rather than maintained separately. Adding a new theme only requires one change:
+
+```ts
+export const themeNames = ["dark", "light", "ubuntu"] as const;
+export type ThemeName = typeof themeNames[number];  // "dark" | "light" | "ubuntu"
+```
+
+TypeScript uses these to catch mistakes at compile time — e.g. `push("typo", ...)` or `theme: "purple"` will error before the code runs.
 
 ---
 
@@ -508,7 +566,7 @@ Let's trace exactly what happens when a user types **`skills`** and presses Ente
       (adds "guest@portfolio:~$ skills" to the display)
    → setCommandHistory(prev => [...prev, "skills"])
       (stores for ↑/↓ navigation)
-   → switch hits case "skills":
+   → commandMap["skills"] found → handler called:
       push("result", renderSkills())
 
 4. portfolio.tsx
@@ -599,7 +657,7 @@ The `fun` command lets users activate ambient visual effects that overlay the te
 ### Architecture
 
 ```
-data.ts                    ← AVAILABLE_EFFECTS: EffectInfo[] (name + status)
+staticData.ts              ← AVAILABLE_EFFECTS: EffectInfo[] (name + status)
     ↓
 useCommandExecutor         ← validates effect name & status, sets currentEffect
     ↓
@@ -613,6 +671,7 @@ FirefliesCanvas.tsx        ← Canvas API animation (pointer-events: none)
 Each effect has a `status` field (`"done"` | `"planning"`):
 
 ```ts
+// src/data/staticData.ts
 export const AVAILABLE_EFFECTS: EffectInfo[] = [
   { name: "fireflies", status: "done" },
   { name: "rain", status: "planning" },
@@ -647,5 +706,5 @@ Constants (colour, size, speed, pulse rate) are ported directly from the [Firefl
 ### Adding a new effect
 
 1. Create a canvas component (e.g. `RainCanvas.tsx`) — call `onComplete` when the animation ends
-2. Add `{ name: "rain", status: "done" }` to `AVAILABLE_EFFECTS` in `data.ts`
+2. Add `{ name: "rain", status: "done" }` to `AVAILABLE_EFFECTS` in `src/data/staticData.ts`
 3. Add a conditional render in `Terminal.tsx`: `{currentEffect === "rain" && <RainCanvas onComplete={clearEffect} />}`

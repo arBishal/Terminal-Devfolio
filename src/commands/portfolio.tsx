@@ -98,16 +98,6 @@ export function renderExperience() {
     );
 }
 
-/** Called as a side effect in the command executor, BEFORE renderResume() */
-export function triggerResumeDownload() {
-    const link = document.createElement("a");
-    link.href = portfolioData.resume.filePath;
-    link.download = portfolioData.resume.downloadFilename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
 export function renderResume() {
     return (
         <div className="space-y-2">
