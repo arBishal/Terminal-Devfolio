@@ -5,6 +5,7 @@ import { TerminalHeader } from "@/components/TerminalHeader";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { FirefliesCanvas } from "@/components/FirefliesCanvas";
 import { MatrixRainCanvas } from "@/components/MatrixRainCanvas";
+import { StarfieldCanvas } from "@/components/StarfieldCanvas";
 import { useCommandExecutor } from "@/hooks/useCommandExecutor";
 
 /**
@@ -97,6 +98,7 @@ export function Terminal() {
     <div data-theme={currentThemeName} className="bg-t-bg text-t-text font-mono min-h-dvh">
       {currentEffect === "fireflies" && <FirefliesCanvas onComplete={clearEffect} />}
       {currentEffect === "matrix-rain" && <MatrixRainCanvas onComplete={clearEffect} />}
+      {currentEffect === "starfield" && <StarfieldCanvas onComplete={clearEffect} />}
       <div className="h-dvh flex flex-col">
         <TerminalHeader onClose={() => setIsClosed(true)} />
         <WelcomeScreen
