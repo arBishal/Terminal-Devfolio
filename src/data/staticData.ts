@@ -14,5 +14,5 @@ export interface EffectInfo {
 
 export const AVAILABLE_EFFECTS: EffectInfo[] = [
     { name: "fireflies", status: "done" },
-    { name: "rain", status: "planning" },
+    { name: "matrix-rain", status: "done" },
 ];
