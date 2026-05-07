@@ -14,7 +14,7 @@ A fully interactive, terminal-style developer portfolio built with React, TypeSc
 - **Command-driven UI** — navigate the portfolio entirely through typed commands
 - **Inline ghost-text autocomplete** — first matching suggestion appears as you type; accept it with `Tab` or double-tap
 - **Command history** — navigate previous commands with `↑` / `↓`
-- **Visual effects** — ambient canvas animations (e.g. `fun fireflies`); each effect has a status (`done` / `planning`) so only ready effects can be activated
+- **Visual effects** — ambient canvas animations triggered via `fun <effect>`; three effects available: `fireflies`, `matrix-rain` (Bangla + Katakana glyphs), and `starfield` (3D perspective); each effect has a status (`done` / `planning`) so only ready effects can be activated
 - **Three themes** — `dark` (default), `light`, and `ubuntu` — switch live with `theme <name>`
 - **Mobile-friendly** — touch-optimised keyboard UX, commands panel auto-collapses on focus
 - **Responsive layout** — works from small to widescreen
@@ -34,7 +34,9 @@ A fully interactive, terminal-style developer portfolio built with React, TypeSc
 | `blog` | Links to blog platforms |
 | `theme` | List available themes |
 | `fun` | List visual effects |
-| `fun <effect>` | Activate a visual effect (e.g. `fun fireflies`) |
+| `fun fireflies` | Ambient firefly particle effect |
+| `fun matrix-rain` | Bangla/Katakana digital rain |
+| `fun starfield` | 3D perspective warp-speed starfield |
 | `fun <effect> clear` | Clear an active effect |
 | `help` | Show all commands |
 | `clear` | Clear terminal output |
@@ -84,12 +86,14 @@ src/
 │   └── misc.tsx       # ls, pwd, whoami, date, sudo, hack, exit, hello …
 │
 ├── components/
-│   ├── Terminal.tsx        # Root layout, theme data-attr, scroll logic
-│   ├── TerminalHeader.tsx  # Title bar + close button
-│   ├── TerminalOutput.tsx  # Renders command history
-│   ├── WelcomeScreen.tsx   # Clickable command grid (collapsible)
-│   ├── CommandLine.tsx     # Input, inline ghost-text autocomplete, history nav
-│   └── FirefliesCanvas.tsx # Canvas-based firefly ambient animation
+│   ├── Terminal.tsx          # Root layout, theme data-attr, scroll logic
+│   ├── TerminalHeader.tsx    # Title bar + close button
+│   ├── TerminalOutput.tsx    # Renders command history
+│   ├── WelcomeScreen.tsx     # Clickable command grid (collapsible)
+│   ├── CommandLine.tsx       # Input, inline ghost-text autocomplete, history nav
+│   ├── FirefliesCanvas.tsx   # Canvas: ambient firefly particle animation
+│   ├── MatrixRainCanvas.tsx  # Canvas: Bangla + Katakana digital rain
+│   └── StarfieldCanvas.tsx   # Canvas: 3D perspective warp-speed starfield
 │
 ├── hooks/
 │   ├── useCommandExecutor.tsx  # Composes sub-hooks, owns command dispatch
@@ -207,3 +211,11 @@ npm run test:coverage   # generate coverage report in coverage/
 ## License
 
 MIT — feel free to fork and make it your own.
+
+---
+
+## Credits
+
+| Effect | Reference |
+|---|---|
+| **Starfield** (3D perspective projection) | [Starfield graphic effect — sunshine2k.de](https://www.sunshine2k.de/coding/javascript/graphiceffects/02_starfield/02_starfield.html) |

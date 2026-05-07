@@ -35,8 +35,8 @@ const ALPHA_CUTOFF = 0.02;  // remove cells below this alpha
 const SCRAMBLE_RATE = 0.06;  // probability per cell per frame
 
 // ── Speed + timing ────────────────────────────────────────────────────────────
-const SPEED_MIN = 0.30; // cells per frame
-const SPEED_MAX = 0.90;
+const SPEED_MIN = 0.15; // cells per frame
+const SPEED_MAX = 0.45;
 const RAIN_DURATION_MS = 9000; // total run time before onComplete
 
 // Mobile breakpoints
@@ -130,8 +130,10 @@ export function MatrixRainCanvas({ onComplete }: MatrixRainCanvasProps) {
             col.headY += col.speed;
             const currentRow = Math.floor(col.headY);
 
-            // Spawn a new head cell for every new integer row reached
-            if (!stoppingRef.current && currentRow > col.lastRow) {
+            // Spawn a new head cell for every new integer row reached.
+            // Continue spawning until head exits the bottom — even during stopping —
+            // so columns always drop fully to the edge before draining.
+            if (col.headY <= rows && currentRow > col.lastRow) {
                 col.lastRow = currentRow;
                 col.cells.push({ char: randomChar(), cellY: currentRow, alpha: HEAD_ALPHA });
             }
@@ -139,7 +141,7 @@ export function MatrixRainCanvas({ onComplete }: MatrixRainCanvasProps) {
             // ── Update + draw cells ───────────────────────────────────────────
             for (let i = col.cells.length - 1; i >= 0; i--) {
                 const cell = col.cells[i];
-                const isHead = i === col.cells.length - 1 && !stoppingRef.current;
+                const isHead = i === col.cells.length - 1 && col.headY <= rows;
 
                 // Decay non-head cells
                 if (!isHead) cell.alpha -= ALPHA_DECAY;
