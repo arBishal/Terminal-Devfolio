@@ -8,6 +8,9 @@
  *
  * Lifecycle: runs for STARFIELD_DURATION_MS, then `onComplete` is called.
  * Canvas uses `pointer-events: none` — terminal stays fully interactive.
+ *
+ * Attribution: 3D projection approach inspired by
+ * https://www.sunshine2k.de/coding/javascript/graphiceffects/02_starfield/02_starfield.html
  */
 import { useEffect, useRef, useCallback } from "react";
 

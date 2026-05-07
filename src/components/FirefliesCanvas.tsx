@@ -1,27 +1,31 @@
 /**
  * Ambient firefly animation rendered as a fixed full-screen canvas overlay.
- * Visuals (color, size, speed, pulse) are ported from the standalone Fireflies project.
  *
- * Lifecycle: fireflies spawn at the bottom, drift upward, and leave permanently.
- * Once all have exited, `onComplete` is called so Terminal can unmount this component.
+ * Lifecycle:
+ *  - Fireflies spawn at random positions anywhere on screen, one at a time.
+ *  - Each drifts in a random direction and exits permanently when off-screen.
+ *  - Once all have been spawned and have exited, `onComplete` is called.
  *
  * The canvas uses `pointer-events: none` so the terminal remains fully interactive.
  */
 import { useEffect, useRef, useCallback } from "react";
 
-// ── Firefly constants (ported from Fireflies repo defaults) ──────────────
-const FIREFLY_COLOR = "#ddff11";
-const SIZE_MIN = 2;
-const SIZE_MAX = 6;
-const SPEED_MULTIPLIER = 1;
-const PULSE_SPEED = 0.015;
-const MIN_ALPHA = 0.1;
-const MAX_ALPHA = 1;
-const DRIFT_RANGE_X: [number, number] = [-0.5, 0.5];
-const GLOW_BLUR = 8;
-const BASE_COUNT = 80;
+// ── Firefly constants ─────────────────────────────────────────────────────────
+const FIREFLY_COLOR     = "#ddff11";
+const SIZE_MIN          = 2;
+const SIZE_MAX          = 6;
+const SPEED_MIN         = 0.3;  // px/frame before multiplier
+const SPEED_MAX         = 1.0;
+const SPEED_MULTIPLIER  = 1.5;
+const PULSE_SPEED       = 0.015;
+const MIN_ALPHA         = 0.1;
+const MAX_ALPHA         = 1;
+const GLOW_BLUR         = 8;
+const BASE_COUNT        = 80;
+const SPAWN_INTERVAL    = 8;    // frames between each new firefly appearing
+const FADE_IN_SPEED     = 0.06; // alpha/frame during initial fade-in (~10 frames to be visible)
 
-// Mobile breakpoints (same as Fireflies repo)
+// Mobile breakpoints
 const BP_SM = 640;
 const BP_MD = 768;
 
@@ -33,6 +37,7 @@ interface Firefly {
     dy: number;
     alpha: number;
     pulseDir: 1 | -1;
+    fadingIn: boolean; // true until the initial fade-in is complete
 }
 
 function hexToRgb(hex: string) {
@@ -48,16 +53,22 @@ function getScreenCount() {
     return Math.floor(BASE_COUNT * mult);
 }
 
-/** Spawn a single firefly at a random x along the bottom edge. */
+/**
+ * Spawn a firefly at a random position anywhere on screen,
+ * drifting in a fully random direction.
+ */
 function createFirefly(canvasW: number, canvasH: number): Firefly {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * (SPEED_MAX - SPEED_MIN) + SPEED_MIN;
     return {
-        x: Math.random() * canvasW,
-        y: canvasH,
-        r: Math.random() * (SIZE_MAX - SIZE_MIN) + SIZE_MIN,
-        dx: Math.random() * (DRIFT_RANGE_X[1] - DRIFT_RANGE_X[0]) + DRIFT_RANGE_X[0],
-        dy: -(Math.random() * 0.8 + 0.2), // always upward
-        alpha: Math.random() * (MAX_ALPHA - MIN_ALPHA) + MIN_ALPHA,
-        pulseDir: Math.random() > 0.5 ? 1 : -1,
+        x:        Math.random() * canvasW,
+        y:        Math.random() * canvasH,
+        r:        Math.random() * (SIZE_MAX - SIZE_MIN) + SIZE_MIN,
+        dx:       Math.cos(angle) * speed,
+        dy:       Math.sin(angle) * speed,
+        alpha:    0,              // start invisible — fade in naturally
+        pulseDir: 1,
+        fadingIn: true,
     };
 }
 
@@ -65,19 +76,20 @@ interface FirefliesCanvasProps {
     onComplete: () => void;
 }
 
-// Hoisted static style — avoids re-creation on every render (rendering-hoist-jsx)
 const CANVAS_STYLE: React.CSSProperties = {
-    position: "fixed",
-    inset: 0,
-    zIndex: 50,
+    position:      "fixed",
+    inset:         0,
+    zIndex:        50,
     pointerEvents: "none",
 };
 
 export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const firefliesRef = useRef<Firefly[]>([]);   // mutable array — mutated in-place during animation
-    const animFrameRef = useRef<number>(0);
-    const onCompleteRef = useRef(onComplete);      // ref so animate() never goes stale
+    const canvasRef     = useRef<HTMLCanvasElement>(null);
+    const activeRef     = useRef<Firefly[]>([]);   // currently visible flies
+    const pendingRef    = useRef<Firefly[]>([]);   // pre-computed, waiting to activate
+    const animFrameRef  = useRef<number>(0);
+    const frameCountRef = useRef<number>(0);
+    const onCompleteRef = useRef(onComplete);
     onCompleteRef.current = onComplete;
 
     const animate = useCallback(() => {
@@ -87,29 +99,42 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        const w = canvas.width;
-        const h = canvas.height;
+        const w   = canvas.width;
+        const h   = canvas.height;
         const rgb = hexToRgb(FIREFLY_COLOR);
 
         ctx.clearRect(0, 0, w, h);
 
-        const flies = firefliesRef.current;
+        // Activate one new firefly every SPAWN_INTERVAL frames
+        frameCountRef.current += 1;
+        if (pendingRef.current.length > 0 && frameCountRef.current % SPAWN_INTERVAL === 0) {
+            activeRef.current.push(pendingRef.current.shift()!);
+        }
+
+        const flies = activeRef.current;
 
         // Iterate in reverse so splice() doesn't skip elements
         for (let i = flies.length - 1; i >= 0; i--) {
             const f = flies[i];
 
-            // ── Pulse ──
-            f.alpha += f.pulseDir * PULSE_SPEED;
-            if (f.alpha >= MAX_ALPHA) { f.alpha = MAX_ALPHA; f.pulseDir = -1; }
-            else if (f.alpha <= MIN_ALPHA) { f.alpha = MIN_ALPHA; f.pulseDir = 1; }
+            // ── Fade-in on spawn, then normal pulse ──
+            if (f.fadingIn) {
+                f.alpha += FADE_IN_SPEED;
+                if (f.alpha >= MIN_ALPHA + 0.15) {
+                    f.fadingIn = false; // hand off to pulse cycle
+                }
+            } else {
+                f.alpha += f.pulseDir * PULSE_SPEED;
+                if (f.alpha >= MAX_ALPHA) { f.alpha = MAX_ALPHA; f.pulseDir = -1; }
+                else if (f.alpha <= MIN_ALPHA) { f.alpha = MIN_ALPHA; f.pulseDir = 1; }
+            }
 
             // ── Move ──
             f.x += f.dx * SPEED_MULTIPLIER;
             f.y += f.dy * SPEED_MULTIPLIER;
 
-            // ── Remove if off-screen ──
-            if (f.y < -f.r || f.x < -f.r || f.x > w + f.r) {
+            // ── Remove permanently if off any edge ──
+            if (f.y < -f.r || f.y > h + f.r || f.x < -f.r || f.x > w + f.r) {
                 flies.splice(i, 1);
                 continue;
             }
@@ -118,17 +143,16 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
             ctx.beginPath();
             ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
             const colorStr = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${f.alpha})`;
-            ctx.fillStyle = colorStr;
+            ctx.fillStyle   = colorStr;
             ctx.shadowColor = colorStr;
-            ctx.shadowBlur = GLOW_BLUR;
+            ctx.shadowBlur  = GLOW_BLUR;
             ctx.fill();
         }
 
-        // Reset shadow so it doesn't bleed into clearRect next frame
         ctx.shadowBlur = 0;
 
-        // All fireflies have left — signal Terminal to unmount this canvas
-        if (flies.length === 0) {
+        // Done when all flies have been spawned and all active ones have exited
+        if (pendingRef.current.length === 0 && flies.length === 0) {
             onCompleteRef.current();
             return;
         }
@@ -140,28 +164,28 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        // Size canvas to viewport — debounced to avoid thrashing during resize
         let resizeTimer: ReturnType<typeof setTimeout>;
         const resize = () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                canvas.width = window.innerWidth;
+                canvas.width  = window.innerWidth;
                 canvas.height = window.innerHeight;
             }, 150);
         };
-        canvas.width = window.innerWidth;
+        canvas.width  = window.innerWidth;
         canvas.height = window.innerHeight;
         window.addEventListener("resize", resize);
 
-        // Spawn fireflies
+        // Pre-compute all flies — they'll be activated one by one in animate()
         const count = getScreenCount();
-        const flies: Firefly[] = [];
+        const pending: Firefly[] = [];
         for (let i = 0; i < count; i++) {
-            flies.push(createFirefly(canvas.width, canvas.height));
+            pending.push(createFirefly(canvas.width, canvas.height));
         }
-        firefliesRef.current = flies;
+        pendingRef.current  = pending;
+        activeRef.current   = [];
+        frameCountRef.current = 0;
 
-        // Start animation
         animFrameRef.current = requestAnimationFrame(animate);
 
         return () => {
