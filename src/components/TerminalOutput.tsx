@@ -19,7 +19,7 @@ export function TerminalOutput({ history }: TerminalOutputProps) {
           {line.type === "command" && (
             <div data-cmd className="flex items-center gap-2">
               <span className="text-t-accent">guest@portfolio:~$</span>
-              <span className="text-t-accent">{line.content}</span>
+              <span className="text-t-text">{line.content}</span>
             </div>
           )}
           {line.type === "result" && (

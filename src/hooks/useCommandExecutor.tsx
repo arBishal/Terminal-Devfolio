@@ -86,7 +86,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       const name = trimmedCmd.slice(6).trim() as ThemeName;
       if (themeNames.includes(name)) {
         setCurrentThemeName(name);
-        push("result", <p className="text-t-accent">✓ Theme changed to &apos;{name}&apos;</p>);
+        push("result", <p className="text-t-muted">✓ Theme changed to &apos;{name}&apos;</p>);
       } else {
         push("error", `Theme '${name}' not found. Available: ${themeNames.join(", ")}`);
       }
@@ -101,7 +101,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       if (subCmd === "clear") {
         if (currentEffectRef.current === name) {
           setCurrentEffect(null);
-          push("result", <p className="text-t-accent">✓ Effect &apos;{name}&apos; cleared.</p>);
+          push("result", <p className="text-t-muted">✓ Effect &apos;{name}&apos; cleared.</p>);
         } else {
           push("error", `Effect '${name}' is not currently active.`);
         }
@@ -112,10 +112,31 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       if (effect) {
         if (effect.status === "done") {
           if (currentEffectRef.current === name) {
-            push("result", <p className="text-t-muted">Effect &apos;{name}&apos; is already active. To clear it, run: <span className="text-t-accent">fun {name} clear</span></p>);
+            push("result",
+              <p className="text-t-muted">
+                Effect &apos;{name}&apos; is already active. To clear it, run:{" "}
+                <button
+                  className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors"
+                  onClick={() => executeCommand(`fun ${name} clear`)}
+                >
+                  fun {name} clear
+                </button>
+              </p>
+            );
           } else {
             setCurrentEffect(name);
-            push("result", <p className="text-t-accent">✓ Effect &apos;{name}&apos; activated!</p>);
+            push(
+              "result",
+              <p className="text-t-muted">
+                ✓ Effect &apos;{name}&apos; activated! To clear it, run:{" "}
+                <button
+                  className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors text-sm"
+                  onClick={() => executeCommand(`fun ${name} clear`)}
+                >
+                  fun {name} clear
+                </button>
+              </p>
+            );
           }
         } else {
           push("result", <p className="text-t-muted">Effect &apos;{name}&apos; is under development.</p>);
