@@ -1,4 +1,4 @@
-import type { OutputLine } from "@/hooks/useCommandExecutor";
+import type { OutputLine } from "@/types/terminal";
 
 interface TerminalOutputProps {
   history: OutputLine[];

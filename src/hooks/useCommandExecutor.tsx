@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { themeNames } from "@/themes/themes";
 import type { ThemeName } from "@/themes/themes";
 
-// Command renderers
+// Command renderers and handlers
 import {
   renderAbout, renderSkills, renderProjects, renderExperience,
   renderResume, renderContact, renderBlog,
@@ -10,21 +10,18 @@ import {
 import { downloadFile } from "@/utils/download";
 import { portfolioData } from "@/data/portfolioData";
 import { renderHelp } from "@/commands/help";
-import { renderThemeList, renderFunList } from "@/commands/visuals";
-import { AVAILABLE_EFFECTS } from "@/data/staticData";
+import { handleTheme, handleFun } from "@/commands/visuals";
 import {
   renderLs, renderPwd, renderWhoami, renderDate, renderSudo,
-  renderHack, renderExit, renderHello, renderHistory, renderCat, renderEcho,
+  renderHack, renderExit, renderHello, renderHistory,
+  handleCat, handleEcho,
 } from "@/commands/misc";
 
 import { useTerminalHistory } from "./useTerminalHistory";
 import { useTheme } from "./useTheme";
 import { useActiveEffect } from "./useActiveEffect";
 
-export interface OutputLine {
-  type: "command" | "result" | "error";
-  content: React.ReactNode;
-}
+import type { OutputLine, CommandContext, CommandHandler } from "@/types/terminal";
 
 // Hoisted regex — avoids recreation on every command execution
 const WHITESPACE_RE = /\s+/;
@@ -81,143 +78,74 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     setCommandHistory((prev) => [...prev, cmd]);
     setHistoryIndex(-1);
 
-    // ── Prefix handlers for parameterized subcommands ─────────────────────────
-    if (trimmedCmd.startsWith("theme ")) {
-      const name = trimmedCmd.slice(6).trim() as ThemeName;
-      if (themeNames.includes(name)) {
-        setCurrentThemeName(name);
-        push("result", <p className="text-t-muted">✓ Theme changed to &apos;{name}&apos;</p>);
-      } else {
-        push("error", `Theme '${name}' not found. Available: ${themeNames.join(", ")}`);
-      }
-      return;
-    }
-
-    if (trimmedCmd.startsWith("fun ")) {
-      const args = trimmedCmd.slice(4).trim().split(WHITESPACE_RE);
-      const name = args[0];
-      const subCmd = args[1];
-
-      if (subCmd === "clear") {
-        if (currentEffectRef.current === name) {
-          setCurrentEffect(null);
-          push("result", <p className="text-t-muted">✓ Effect &apos;{name}&apos; cleared.</p>);
-        } else {
-          push("error", `Effect '${name}' is not currently active.`);
-        }
-        return;
-      }
-
-      const effect = AVAILABLE_EFFECTS.find(e => e.name === name);
-      if (effect) {
-        if (effect.status === "done") {
-          if (currentEffectRef.current === name) {
-            push("result",
-              <p className="text-t-muted">
-                Effect &apos;{name}&apos; is already active. To clear it, run:{" "}
-                <button
-                  className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors"
-                  onClick={() => executeCommand(`fun ${name} clear`)}
-                >
-                  fun {name} clear
-                </button>
-              </p>
-            );
-          } else {
-            setCurrentEffect(name);
-            push(
-              "result",
-              <p className="text-t-muted">
-                ✓ Effect &apos;{name}&apos; activated! To clear it, run:{" "}
-                <button
-                  className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors text-sm"
-                  onClick={() => executeCommand(`fun ${name} clear`)}
-                >
-                  fun {name} clear
-                </button>
-              </p>
-            );
-          }
-        } else {
-          push("result", <p className="text-t-muted">Effect &apos;{name}&apos; is under development.</p>);
-        }
-      } else {
-        push("error", `Effect '${name}' not found. Available: ${AVAILABLE_EFFECTS.map(e => e.name).join(", ")}`);
-      }
-      return;
-    }
-
-    // ── echo <text> ──────────────────────────────────────────────────────────
-    if (trimmedCmd.startsWith("echo ")) {
-      const text = cmd.trim().slice(5); // slice from original to preserve casing
-      push("result", renderEcho(text));
-      return;
-    }
-
-    // ── cat <filename> ───────────────────────────────────────────────────────
-    if (trimmedCmd.startsWith("cat ")) {
-      const filename = trimmedCmd.slice(4).trim();
-      const fileRoutes: Record<string, () => void> = {
-        "about.txt":      () => push("result", renderAbout()),
-        "contact.txt":    () => push("result", renderContact()),
-        "experience.log": () => push("result", renderExperience()),
-        "resume.pdf":     () => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); push("result", renderResume()); },
-      };
-      const handler = fileRoutes[filename];
-      if (handler) {
-        handler();
-      } else if (filename === "skills/" || filename === "projects/") {
-        push("error", `cat: ${filename}: Is a directory`);
-      } else {
-        push("error", renderCat(filename));
-      }
-      return;
-    }
-
-    // ── Main command dispatch ─────────────────────────────────────────────────
-    const commandMap: Record<string, () => void> = {
-      // Portfolio
-      "help":              () => push("result", renderHelp()),
-      "about":             () => push("result", renderAbout()),
-      "skills":            () => push("result", renderSkills()),
-      "projects":          () => push("result", renderProjects()),
-      "experience":        () => push("result", renderExperience()),
-      "resume":            () => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); push("result", renderResume()); },
-      "contact":           () => push("result", renderContact()),
-      "blog":              () => push("result", renderBlog()),
-      // Visuals
-      "theme":             () => push("result", renderThemeList(currentThemeNameRef.current, executeCommand)),
-      "fun":               () => push("result", renderFunList(currentEffectRef.current, executeCommand)),
-      // Terminal control
-      "clear":             () => setHistory([]),
-      "hide":              () => { setIsCommandsOpen(false); push("result", <p className="text-t-muted">Commands hidden. Type <span className="text-t-accent">show</span> to bring them back.</p>); },
-      "show":              () => { setIsCommandsOpen(true); push("result", <p className="text-t-muted">Commands visible.</p>); },
-      // Unix-style / easter eggs
-      "ls":                () => push("result", renderLs()),
-      "ls -la":            () => push("result", renderLs()),
-      "ls -l":             () => push("result", renderLs()),
-      "pwd":               () => push("result", renderPwd()),
-      "whoami":            () => push("result", renderWhoami()),
-      "date":              () => push("result", renderDate()),
-      "sudo":              () => push("error", renderSudo()),
-      "sudo rm -rf /":     () => push("error", renderSudo()),
-      "rm -rf /":          () => push("error", renderSudo()),
-      "hack":              () => push("result", renderHack()),
-      "hack the planet":   () => push("result", renderHack()),
-      "exit":              () => push("result", renderExit()),
-      "quit":              () => push("result", renderExit()),
-      "hello":             () => push("result", renderHello()),
-      "hi":                () => push("result", renderHello()),
-      "history":           () => push("result", renderHistory(commandHistoryRef.current)),
-      "cat":               () => push("error", renderCat()),
-      "echo":              () => push("result", renderEcho()),
+    // Build context
+    const ctx: CommandContext = {
+      push,
+      executeCommand,
+      setHistory,
+      setIsCommandsOpen,
+      commandHistory: commandHistoryRef.current,
+      currentThemeName: currentThemeNameRef.current,
+      setCurrentThemeName,
+      currentEffect: currentEffectRef.current,
+      setCurrentEffect,
     };
 
-    const handler = commandMap[trimmedCmd];
-    if (handler) {
-      handler();
+    // Parse command and args
+    const [commandName, ...argsArray] = trimmedCmd.split(WHITESPACE_RE);
+    const args = argsArray;
+    
+    // rawArgs preserves casing and spacing for commands like echo
+    const firstSpaceIdx = cmd.trimStart().indexOf(" ");
+    const rawArgs = firstSpaceIdx !== -1 ? cmd.trimStart().slice(firstSpaceIdx + 1) : "";
+
+    // ── Handlers Registry ──────────────────────────────────────────────────
+    const handlers: Record<string, CommandHandler> = {
+      "theme": handleTheme,
+      "fun": handleFun,
+      "cat": handleCat,
+      "echo": handleEcho,
+      // Portfolio
+      "help":       (a, c) => c.push("result", renderHelp()),
+      "about":      (a, c) => c.push("result", renderAbout()),
+      "skills":     (a, c) => c.push("result", renderSkills()),
+      "projects":   (a, c) => c.push("result", renderProjects()),
+      "experience": (a, c) => c.push("result", renderExperience()),
+      "resume":     (a, c) => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); c.push("result", renderResume()); },
+      "contact":    (a, c) => c.push("result", renderContact()),
+      "blog":       (a, c) => c.push("result", renderBlog()),
+      // Terminal control
+      "clear":      (a, c) => c.setHistory([]),
+      "hide":       (a, c) => { c.setIsCommandsOpen(false); c.push("result", <p className="text-t-muted">Commands hidden. Type <span className="text-t-accent">show</span> to bring them back.</p>); },
+      "show":       (a, c) => { c.setIsCommandsOpen(true); c.push("result", <p className="text-t-muted">Commands visible.</p>); },
+      // Unix-style / easter eggs
+      "ls":                (a, c) => c.push("result", renderLs()),
+      "pwd":               (a, c) => c.push("result", renderPwd()),
+      "whoami":            (a, c) => c.push("result", renderWhoami()),
+      "date":              (a, c) => c.push("result", renderDate()),
+      "sudo":              (a, c) => c.push("error", renderSudo()),
+      "hack":              (a, c) => c.push("result", renderHack()),
+      "exit":              (a, c) => c.push("result", renderExit()),
+      "quit":              (a, c) => c.push("result", renderExit()),
+      "hello":             (a, c) => c.push("result", renderHello()),
+      "hi":                (a, c) => c.push("result", renderHello()),
+      "history":           (a, c) => c.push("result", renderHistory(c.commandHistory)),
+    };
+
+    // Aliases
+    handlers["ls -la"] = handlers["ls"];
+    handlers["ls -l"] = handlers["ls"];
+    handlers["sudo rm -rf /"] = handlers["sudo"];
+    handlers["rm -rf /"] = handlers["sudo"];
+    handlers["hack the planet"] = handlers["hack"];
+
+    // ── Dispatch ─────────────────────────────────────────────────────────────
+    if (handlers[trimmedCmd]) {
+        handlers[trimmedCmd]([], ctx, "");
+    } else if (handlers[commandName]) {
+        handlers[commandName](args, ctx, rawArgs);
     } else {
-      push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
+        ctx.push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

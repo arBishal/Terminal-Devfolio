@@ -1,4 +1,7 @@
 import { portfolioData } from "@/data/portfolioData";
+import { downloadFile } from "@/utils/download";
+import { renderAbout, renderContact, renderExperience, renderResume } from "./portfolio";
+import type { CommandHandler } from "@/types/terminal";
 
 export function renderLs() {
     const u = portfolioData.personal.username;
@@ -96,3 +99,29 @@ export function renderEcho(text?: string) {
     }
     return <p className="text-t-text">{text}</p>;
 }
+
+export const handleEcho: CommandHandler = (args, ctx, rawArgs) => {
+    ctx.push("result", renderEcho(rawArgs));
+};
+
+export const handleCat: CommandHandler = (args, ctx) => {
+    const filename = args[0];
+    if (!filename) {
+        ctx.push("error", renderCat());
+        return;
+    }
+    const fileRoutes: Record<string, () => void> = {
+        "about.txt":      () => ctx.push("result", renderAbout()),
+        "contact.txt":    () => ctx.push("result", renderContact()),
+        "experience.log": () => ctx.push("result", renderExperience()),
+        "resume.pdf":     () => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); ctx.push("result", renderResume()); },
+    };
+    const handler = fileRoutes[filename];
+    if (handler) {
+        handler();
+    } else if (filename === "skills/" || filename === "projects/") {
+        ctx.push("error", `cat: ${filename}: Is a directory`);
+    } else {
+        ctx.push("error", renderCat(filename));
+    }
+};

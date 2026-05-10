@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import type { OutputLine } from "./useCommandExecutor";
+import type { OutputLine } from "@/types/terminal";
 
 export interface TerminalHistory {
   history: OutputLine[];

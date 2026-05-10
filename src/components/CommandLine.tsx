@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ALL_COMMAND_NAMES } from "@/data/commandRegistry";
+import { useAutocomplete } from "@/hooks/useAutocomplete";
+import { useHistoryNavigation } from "@/hooks/useHistoryNavigation";
 
 interface CommandLineProps {
   onExecute: (command: string) => void;
@@ -18,9 +19,16 @@ export function CommandLine({
   onFocusChange,
 }: CommandLineProps) {
   const [input, setInput] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastTapRef = useRef<number>(0);
+
+  const { applyFirstSuggestion, ghostText } = useAutocomplete(input, setInput);
+  const { navigateHistory } = useHistoryNavigation(
+    commandHistory,
+    historyIndex,
+    setHistoryIndex,
+    setInput
+  );
 
   // On desktop (pointer: fine), keep the input always focused.
   // Re-focus immediately on blur so the cursor never stops blinking.
@@ -38,7 +46,6 @@ export function CommandLine({
     if (input.trim()) {
       onExecute(input);
       setInput("");
-      setSuggestions([]);
     }
   };
 
@@ -46,39 +53,15 @@ export function CommandLine({
     // Navigate command history
     if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (commandHistory.length > 0) {
-        const newIndex =
-          historyIndex === -1
-            ? commandHistory.length - 1
-            : Math.max(0, historyIndex - 1);
-        setHistoryIndex(newIndex);
-        setInput(commandHistory[newIndex]);
-      }
+      navigateHistory("up");
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (historyIndex !== -1) {
-        const newIndex = historyIndex + 1;
-        if (newIndex >= commandHistory.length) {
-          setHistoryIndex(-1);
-          setInput("");
-        } else {
-          setHistoryIndex(newIndex);
-          setInput(commandHistory[newIndex]);
-        }
-      }
+      navigateHistory("down");
     } else if (e.key === "Tab") {
       e.preventDefault();
       applyFirstSuggestion();
     }
   };
-
-  /** Shared logic for Tab (keyboard) and double-tap (touch) autocomplete. */
-  function applyFirstSuggestion() {
-    if (suggestions.length > 0) {
-      setInput(suggestions[0]);
-      setSuggestions([]);
-    }
-  }
 
   /** Double-tap on the input triggers autocomplete on touch devices. */
   const handleTouchEnd = () => {
@@ -90,23 +73,8 @@ export function CommandLine({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInput(value);
-
-    // Autocomplete suggestions
-    if (value.trim()) {
-      const matches = ALL_COMMAND_NAMES.filter((cmd) =>
-        cmd.startsWith(value.toLowerCase()),
-      );
-      setSuggestions(matches);
-    } else {
-      setSuggestions([]);
-    }
+    setInput(e.target.value);
   };
-
-  // The ghost text is the portion of the top suggestion that hasn't been typed yet.
-  const ghostText =
-    suggestions[0] && input ? suggestions[0].slice(input.length) : "";
 
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
