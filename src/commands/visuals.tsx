@@ -1,6 +1,7 @@
 import { themeNames } from "@/themes/themes";
 import { AVAILABLE_EFFECTS } from "@/data/staticData";
 import type { ThemeName } from "@/themes/themes";
+import type { CommandHandler } from "@/types/terminal";
 
 /** Renders the interactive theme picker shown by the `theme` command. */
 export function renderThemeList(
@@ -78,3 +79,75 @@ export function renderFunList(
         </div>
     );
 }
+
+export const handleTheme: CommandHandler = (args, ctx) => {
+    const name = args[0] as ThemeName;
+    if (!name) {
+        ctx.push("result", renderThemeList(ctx.currentThemeName, ctx.executeCommand));
+        return;
+    }
+    if (themeNames.includes(name)) {
+        ctx.setCurrentThemeName(name);
+        ctx.push("result", <p className="text-t-muted">✓ Theme changed to &apos;{name}&apos;</p>);
+    } else {
+        ctx.push("error", `Theme '${name}' not found. Available: ${themeNames.join(", ")}`);
+    }
+};
+
+export const handleFun: CommandHandler = (args, ctx) => {
+    const name = args[0];
+    const subCmd = args[1];
+
+    if (!name) {
+        ctx.push("result", renderFunList(ctx.currentEffect, ctx.executeCommand));
+        return;
+    }
+
+    if (subCmd === "clear") {
+        if (ctx.currentEffect === name) {
+            ctx.setCurrentEffect(null);
+            ctx.push("result", <p className="text-t-muted">✓ Effect &apos;{name}&apos; cleared.</p>);
+        } else {
+            ctx.push("error", `Effect '${name}' is not currently active.`);
+        }
+        return;
+    }
+
+    const effect = AVAILABLE_EFFECTS.find(e => e.name === name);
+    if (effect) {
+        if (effect.status === "done") {
+            if (ctx.currentEffect === name) {
+                ctx.push(
+                    "result",
+                    <p className="text-t-muted">
+                        Effect &apos;{name}&apos; is already active. To clear it, run:{" "}
+                        <button
+                            className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors"
+                            onClick={() => ctx.executeCommand(`fun ${name} clear`)}
+                        >
+                            fun {name} clear
+                        </button>
+                    </p>
+                );
+            } else {
+                ctx.setCurrentEffect(name);
+                ctx.push(
+                    "result",
+                    <p className="text-t-muted">
+                        ✓ Effect &apos;{name}&apos; activated! To clear it, run:{" "}
+                        <button
+                            className="text-t-accent hover:opacity-80 hover:underline cursor-pointer transition-colors text-sm"
+                            onClick={() => ctx.executeCommand(`fun ${name} clear`)}
+                        >
+                            fun {name} clear
+                        </button>
+                    </p>
+                );
+            }
+        } else {
+            ctx.push("result", <p className="text-t-muted">Effect &apos;{name}&apos; is under development.</p>);
+        }
+    } else {
+        ctx.push("error", `Effect '${name}' not found. Available: ${AVAILABLE_EFFECTS.map(e => e.name).join(", ")}`);
+    }
+};

@@ -15,6 +15,7 @@
  * The canvas uses `pointer-events: none` so the terminal remains fully interactive.
  */
 import { useEffect, useRef, useCallback } from "react";
+import { useCanvasResize } from "@/hooks/useCanvasResize";
 
 // ── Character sets ────────────────────────────────────────────────────────────
 // Katakana, Bengali consonants + vowels, and Bangla digits.
@@ -104,6 +105,8 @@ export function MatrixRainCanvas({ onComplete }: MatrixRainCanvasProps) {
     const onCompleteRef = useRef(onComplete);
     const stoppingRef = useRef(false);
     onCompleteRef.current = onComplete;
+
+    useCanvasResize(canvasRef);
 
     const animate = useCallback(() => {
         const canvas = canvasRef.current;
@@ -200,19 +203,6 @@ export function MatrixRainCanvas({ onComplete }: MatrixRainCanvasProps) {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        // Size canvas to viewport
-        let resizeTimer: ReturnType<typeof setTimeout>;
-        const resize = () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }, 150);
-        };
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        window.addEventListener("resize", resize);
-
         // Spawn columns
         const colCount = getColumnCount(canvas.width);
         const cols: Column[] = [];
@@ -230,8 +220,6 @@ export function MatrixRainCanvas({ onComplete }: MatrixRainCanvasProps) {
         }, RAIN_DURATION_MS);
 
         return () => {
-            window.removeEventListener("resize", resize);
-            clearTimeout(resizeTimer);
             clearTimeout(stopTimer);
             cancelAnimationFrame(animFrameRef.current);
         };

@@ -9,6 +9,7 @@
  * The canvas uses `pointer-events: none` so the terminal remains fully interactive.
  */
 import { useEffect, useRef, useCallback } from "react";
+import { useCanvasResize } from "@/hooks/useCanvasResize";
 
 // ── Firefly constants ─────────────────────────────────────────────────────────
 const FIREFLY_COLOR     = "#ddff11";
@@ -92,6 +93,8 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
     const onCompleteRef = useRef(onComplete);
     onCompleteRef.current = onComplete;
 
+    useCanvasResize(canvasRef);
+
     const animate = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -164,18 +167,6 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        let resizeTimer: ReturnType<typeof setTimeout>;
-        const resize = () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                canvas.width  = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }, 150);
-        };
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-        window.addEventListener("resize", resize);
-
         // Pre-compute all flies — they'll be activated one by one in animate()
         const count = getScreenCount();
         const pending: Firefly[] = [];
@@ -189,8 +180,6 @@ export function FirefliesCanvas({ onComplete }: FirefliesCanvasProps) {
         animFrameRef.current = requestAnimationFrame(animate);
 
         return () => {
-            window.removeEventListener("resize", resize);
-            clearTimeout(resizeTimer);
             cancelAnimationFrame(animFrameRef.current);
         };
     }, [animate]);

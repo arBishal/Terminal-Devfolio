@@ -13,6 +13,7 @@
  * https://www.sunshine2k.de/coding/javascript/graphiceffects/02_starfield/02_starfield.html
  */
 import { useEffect, useRef, useCallback } from "react";
+import { useCanvasResize } from "@/hooks/useCanvasResize";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const BASE_STAR_COUNT = 200;
@@ -88,6 +89,8 @@ export function StarfieldCanvas({ onComplete }: StarfieldCanvasProps) {
     const activeCountRef = useRef(1);   // starts at 1, ramps up to full count
     const frameCountRef  = useRef(0);   // tracks frames for spawn timing
     onCompleteRef.current = onComplete;
+
+    useCanvasResize(canvasRef);
 
     const animate = useCallback(() => {
         const canvas = canvasRef.current;
@@ -193,18 +196,6 @@ export function StarfieldCanvas({ onComplete }: StarfieldCanvasProps) {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        let resizeTimer: ReturnType<typeof setTimeout>;
-        const resize = () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                canvas.width  = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }, 150);
-        };
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-        window.addEventListener("resize", resize);
-
         // Populate field with stars spread across all depths
         const count = getStarCount();
         starsRef.current = Array.from({ length: count }, () =>
@@ -218,8 +209,6 @@ export function StarfieldCanvas({ onComplete }: StarfieldCanvasProps) {
         }, STARFIELD_DURATION_MS);
 
         return () => {
-            window.removeEventListener("resize", resize);
-            clearTimeout(resizeTimer);
             clearTimeout(stopTimer);
             cancelAnimationFrame(animFrameRef.current);
         };

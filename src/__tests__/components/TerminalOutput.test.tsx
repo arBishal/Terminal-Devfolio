@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { TerminalOutput } from '@/components/TerminalOutput';
-import type { OutputLine } from '@/hooks/useCommandExecutor';
+import type { OutputLine } from '@/types/terminal';
 
 function setup(history: OutputLine[]) {
     return render(<TerminalOutput history={history} />);
