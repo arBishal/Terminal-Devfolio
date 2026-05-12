@@ -6,6 +6,7 @@ import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { FirefliesCanvas } from "@/components/FirefliesCanvas";
 import { MatrixRainCanvas } from "@/components/MatrixRainCanvas";
 import { StarfieldCanvas } from "@/components/StarfieldCanvas";
+import { CatCompanion } from "@/components/CatCompanion";
 import { useCommandExecutor } from "@/hooks/useCommandExecutor";
 
 /**
@@ -37,6 +38,7 @@ export function Terminal() {
     currentThemeName,
     currentEffect,
     clearEffect,
+    isMeowActive,
     executeCommand,
   } = useCommandExecutor({ setIsCommandsOpen });
 
@@ -99,6 +101,7 @@ export function Terminal() {
       {currentEffect === "fireflies" && <FirefliesCanvas onComplete={clearEffect} />}
       {currentEffect === "matrix-rain" && <MatrixRainCanvas onComplete={clearEffect} />}
       {currentEffect === "starfield" && <StarfieldCanvas onComplete={clearEffect} />}
+      {isMeowActive && <CatCompanion />}
       <div className="h-dvh flex flex-col">
         <TerminalHeader onClose={() => setIsClosed(true)} />
         <WelcomeScreen

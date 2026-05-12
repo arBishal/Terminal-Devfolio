@@ -14,7 +14,7 @@ import { handleTheme, handleFun } from "@/commands/visuals";
 import {
   renderLs, renderPwd, renderWhoami, renderDate, renderSudo,
   renderHack, renderExit, renderHello, renderHistory,
-  handleCat, handleEcho,
+  handleCat, handleEcho, handleMeow,
 } from "@/commands/misc";
 
 import { useTerminalHistory } from "./useTerminalHistory";
@@ -42,6 +42,8 @@ export interface CommandExecutor {
   currentThemeName: ThemeName;
   currentEffect: string | null;
   clearEffect: () => void;
+  isMeowActive: boolean;
+  setIsMeowActive: React.Dispatch<React.SetStateAction<boolean>>;
   executeCommand: (cmd: string) => void;
 }
 
@@ -58,7 +60,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
   } = useTerminalHistory();
 
   const { currentThemeName, currentThemeNameRef, setCurrentThemeName } = useTheme();
-  const { currentEffect, currentEffectRef, setCurrentEffect, clearEffect } = useActiveEffect();
+  const { currentEffect, currentEffectRef, setCurrentEffect, clearEffect, isMeowActive, setIsMeowActive } = useActiveEffect();
 
   const executeCommand = useCallback((cmd: string) => {
     function push(type: OutputLine["type"], content: OutputLine["content"]) {
@@ -89,12 +91,14 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       setCurrentThemeName,
       currentEffect: currentEffectRef.current,
       setCurrentEffect,
+      isMeowActive,
+      setIsMeowActive,
     };
 
     // Parse command and args
     const [commandName, ...argsArray] = trimmedCmd.split(WHITESPACE_RE);
     const args = argsArray;
-    
+
     // rawArgs preserves casing and spacing for commands like echo
     const firstSpaceIdx = cmd.trimStart().indexOf(" ");
     const rawArgs = firstSpaceIdx !== -1 ? cmd.trimStart().slice(firstSpaceIdx + 1) : "";
@@ -105,31 +109,32 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
       "fun": handleFun,
       "cat": handleCat,
       "echo": handleEcho,
+      "meow": handleMeow,
       // Portfolio
-      "help":       (a, c) => c.push("result", renderHelp()),
-      "about":      (a, c) => c.push("result", renderAbout()),
-      "skills":     (a, c) => c.push("result", renderSkills()),
-      "projects":   (a, c) => c.push("result", renderProjects()),
+      "help": (a, c) => c.push("result", renderHelp()),
+      "about": (a, c) => c.push("result", renderAbout()),
+      "skills": (a, c) => c.push("result", renderSkills()),
+      "projects": (a, c) => c.push("result", renderProjects()),
       "experience": (a, c) => c.push("result", renderExperience()),
-      "resume":     (a, c) => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); c.push("result", renderResume()); },
-      "contact":    (a, c) => c.push("result", renderContact()),
-      "blog":       (a, c) => c.push("result", renderBlog()),
+      "resume": (a, c) => { downloadFile(portfolioData.resume.filePath, portfolioData.resume.downloadFilename); c.push("result", renderResume()); },
+      "contact": (a, c) => c.push("result", renderContact()),
+      "blog": (a, c) => c.push("result", renderBlog()),
       // Terminal control
-      "clear":      (a, c) => c.setHistory([]),
-      "hide":       (a, c) => { c.setIsCommandsOpen(false); c.push("result", <p className="text-t-muted">Commands hidden. Type <span className="text-t-accent">show</span> to bring them back.</p>); },
-      "show":       (a, c) => { c.setIsCommandsOpen(true); c.push("result", <p className="text-t-muted">Commands visible.</p>); },
+      "clear": (a, c) => { c.setHistory([]); c.setIsMeowActive(false); },
+      "hide": (a, c) => { c.setIsCommandsOpen(false); c.push("result", <p className="text-t-muted">Commands hidden. Type <span className="text-t-accent">show</span> to bring them back.</p>); },
+      "show": (a, c) => { c.setIsCommandsOpen(true); c.push("result", <p className="text-t-muted">Commands visible.</p>); },
       // Unix-style / easter eggs
-      "ls":                (a, c) => c.push("result", renderLs()),
-      "pwd":               (a, c) => c.push("result", renderPwd()),
-      "whoami":            (a, c) => c.push("result", renderWhoami()),
-      "date":              (a, c) => c.push("result", renderDate()),
-      "sudo":              (a, c) => c.push("error", renderSudo()),
-      "hack":              (a, c) => c.push("result", renderHack()),
-      "exit":              (a, c) => c.push("result", renderExit()),
-      "quit":              (a, c) => c.push("result", renderExit()),
-      "hello":             (a, c) => c.push("result", renderHello()),
-      "hi":                (a, c) => c.push("result", renderHello()),
-      "history":           (a, c) => c.push("result", renderHistory(c.commandHistory)),
+      "ls": (a, c) => c.push("result", renderLs()),
+      "pwd": (a, c) => c.push("result", renderPwd()),
+      "whoami": (a, c) => c.push("result", renderWhoami()),
+      "date": (a, c) => c.push("result", renderDate()),
+      "sudo": (a, c) => c.push("error", renderSudo()),
+      "hack": (a, c) => c.push("result", renderHack()),
+      "exit": (a, c) => c.push("result", renderExit()),
+      "quit": (a, c) => c.push("result", renderExit()),
+      "hello": (a, c) => c.push("result", renderHello()),
+      "hi": (a, c) => c.push("result", renderHello()),
+      "history": (a, c) => c.push("result", renderHistory(c.commandHistory)),
     };
 
     // Aliases
@@ -141,14 +146,14 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
 
     // ── Dispatch ─────────────────────────────────────────────────────────────
     if (handlers[trimmedCmd]) {
-        handlers[trimmedCmd]([], ctx, "");
+      handlers[trimmedCmd]([], ctx, "");
     } else if (handlers[commandName]) {
-        handlers[commandName](args, ctx, rawArgs);
+      handlers[commandName](args, ctx, rawArgs);
     } else {
-        ctx.push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
+      ctx.push("error", `Command not found: ${cmd}. Type 'help' for available commands.`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, clearEffect, executeCommand };
+  return { history, commandHistory, historyIndex, setHistoryIndex, currentThemeName, currentEffect, clearEffect, isMeowActive, setIsMeowActive, executeCommand };
 }

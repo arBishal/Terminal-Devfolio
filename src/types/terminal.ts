@@ -16,6 +16,8 @@ export interface CommandContext {
   setCurrentThemeName: (name: ThemeName) => void;
   currentEffect: string | null;
   setCurrentEffect: (name: string | null) => void;
+  isMeowActive: boolean;
+  setIsMeowActive: Dispatch<SetStateAction<boolean>>;
 }
 
 export type CommandHandler = (args: string[], ctx: CommandContext, rawArgs: string) => void;

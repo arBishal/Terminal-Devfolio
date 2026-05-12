@@ -50,6 +50,7 @@ const COMMAND_REGISTRY: CommandEntry[] = [
     { name: "hi",            hidden: true },
     { name: "cat",           hidden: true },
     { name: "echo",          hidden: true },
+    { name: "meow",          hidden: true },
 ];
 
 // ── Derived exports ────────────────────────────────────────────────────────────
