@@ -11,6 +11,16 @@ if (typeof window !== "undefined") {
   });
 }
 
+/**
+ * A hidden easter egg component that spawns a small ASCII cat following the cursor.
+ * 
+ * Performance Note:
+ * This component completely bypasses React state (`useState`) for its animation loop.
+ * It uses a `requestAnimationFrame` loop with Linear Interpolation (Lerp) and directly 
+ * mutates the DOM via refs (`cursorRef.current.style.transform` and `textContent`).
+ * This ensures the 60fps tracking animation runs perfectly smooth without triggering 
+ * any React component re-renders.
+ */
 export function CatCompanion() {
   const posRef = useRef({ x: lastKnownMousePos.x, y: lastKnownMousePos.y });
   const targetRef = useRef({ x: lastKnownMousePos.x, y: lastKnownMousePos.y });
