@@ -79,8 +79,8 @@ export function renderExperience() {
         <div className="space-y-2">
             <p className="text-t-warning">$ cat experience.log</p>
             <div className="space-y-4 pl-4">
-                {portfolioData.experience.map((job) => (
-                    <div key={job.company} className="border-l-2 border-t-border pl-4">
+                {portfolioData.experience.map((job, index) => (
+                    <div key={`${job.company}-${index}`} className="border-l-2 border-t-border pl-4">
                         <div className="flex justify-between items-start flex-wrap gap-2">
                             <p className="text-t-accent2 font-semibold">{job.title}</p>
                             <p className="text-t-muted text-sm">{job.period}</p>
