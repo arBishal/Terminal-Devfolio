@@ -123,7 +123,8 @@ App
 └── Terminal                  ← manages layout, theme state, focus logic
     ├── TerminalHeader         ← title bar + close button
     ├── WelcomeScreen          ← clickable command grid (collapsible)
-    ├── FirefliesCanvas?       ← ambient canvas animation (conditional)
+    ├── CatCompanion?          ← interactive easter egg (conditional)
+    ├── [Canvas Effects]?      ← e.g. FirefliesCanvas, MatrixRainCanvas
     └── [scrollable pane]
         ├── TerminalOutput     ← renders command history
         └── CommandLine        ← input + ghost autocomplete + ▊ cursor
@@ -272,41 +273,14 @@ guest@portfolio:~$ ab|out                                              ▊
 - Ghost text is `suggestions[0].slice(input.length)` — the remaining characters of the best match
 - ▊ sits `position: absolute; right: 0` — it never moves
 
-### Autocomplete
+### Autocomplete & History (Decoupled Hooks)
 
-`ALL_COMMAND_NAMES` is a sorted array of all valid command names — including hidden ones — derived from `commandRegistry.ts`. As the user types, it is filtered by `startsWith`:
+To keep `CommandLine.tsx` strictly focused on UI presentation, all logic for typing, ghost text, and arrow-key navigation was extracted into custom hooks:
 
-```tsx
-const matches = ALL_COMMAND_NAMES.filter(cmd => cmd.startsWith(value.toLowerCase()));
-setSuggestions(matches);
-```
+1. **`useAutocomplete`**: Listens to the `input` string, filters `ALL_COMMAND_NAMES` from the registry, and computes the `ghostText`. It exposes an `applyFirstSuggestion()` method bound to `Tab` and mobile double-taps.
+2. **`useHistoryNavigation`**: Owns the `ArrowUp`/`ArrowDown` logic to cycle through the `commandHistory` array. It updates the input state when navigating past entries.
 
-To accept: press `Tab` (desktop) or double-tap the input (mobile). Both call `applyFirstSuggestion()`:
-
-```tsx
-function applyFirstSuggestion() {
-  if (suggestions.length > 0) {
-    setInput(suggestions[0]);   // fill the input
-    setSuggestions([]);          // clear ghost text
-  }
-}
-```
-
-### Command history navigation
-
-`commandHistory` is an array of everything the user has typed. `historyIndex` tracks which entry `↑`/`↓` is pointing at (`-1` means "not navigating history"):
-
-```tsx
-if (e.key === "ArrowUp") {
-  const newIndex = historyIndex === -1
-    ? commandHistory.length - 1   // jump to most recent
-    : Math.max(0, historyIndex - 1);
-  setHistoryIndex(newIndex);
-  setInput(commandHistory[newIndex]);
-}
-```
-
-Note: `commandHistory` and `historyIndex` live in `useCommandExecutor`, not here. They're passed in as props so the hook owns the source of truth.
+By decoupling these, `CommandLine.tsx` remains incredibly lightweight and readable.
 
 ### Desktop always-focused
 
@@ -381,32 +355,32 @@ function push(type: OutputLine["type"], content: OutputLine["content"]) {
 
 `prev => [...prev, newItem]` is the React functional update pattern — it always works on the latest state, even in closures.
 
-### The dispatch flow
+### The dispatch flow (CommandRegistry Pattern)
 
-When the user presses Enter, `executeCommand(cmd)` is called:
+When the user presses Enter, `executeCommand(cmd)` is called. Instead of holding a giant switch statement, it acts as a **Command Dispatcher**:
 
-1. Record the command in both `history` (for display) and `commandHistory` (for ↑/↓)
-2. Run prefix handlers for parameterized subcommands (`theme <name>`, `fun <effect>`, `echo <text>`, `cat <file>`) — these parse arguments from the command string, then `return`
-3. Look up the trimmed command in `commandMap`:
+1. Records the command in both `history` (for display) and `commandHistory` (for ↑/↓).
+2. Builds a unified `CommandContext` object containing the terminal's state and setter functions (e.g., `push`, `setCurrentThemeName`, `executeCommand`).
+3. Looks up the parsed command in a `handlers` registry map:
 
 ```tsx
-const commandMap: Record<string, () => void> = {
-  "about":   () => push("result", renderAbout()),
-  "skills":  () => push("result", renderSkills()),
-  "resume":  () => { downloadFile(...); push("result", renderResume()); },
-  "clear":   () => setHistory([]),
+const handlers: Record<string, CommandHandler> = {
+  "about": (args, ctx) => ctx.push("result", renderAbout()),
+  "skills": (args, ctx) => ctx.push("result", renderSkills()),
+  "clear": (args, ctx) => { ctx.setHistory([]); ctx.setIsMeowActive(false); },
+  "theme": handleTheme, // Complex logic extracted to another file
   // …
 };
 
-const handler = commandMap[trimmedCmd];
-if (handler) {
-  handler();
+// Dispatch
+if (handlers[trimmedCmd]) {
+  handlers[trimmedCmd]([], ctx, "");
 } else {
-  push("error", `Command not found: ${cmd}`);
+  ctx.push("error", `Command not found: ${cmd}`);
 }
 ```
 
-Adding a new command means adding one entry to `commandMap` — no structural change to the dispatch logic.
+This pattern fully decouples the command implementations from the terminal engine. Adding a new command just means adding one entry to the `handlers` map.
 
 ### Side effects separated from rendering
 
@@ -703,6 +677,14 @@ A self-contained React component that renders fireflies using the Canvas API:
 - **Non-blocking**: `pointer-events: none` on the canvas ensures the terminal remains fully interactive
 
 Constants (colour, size, speed, pulse rate) are ported directly from the [Fireflies](https://github.com/arBishal/Fireflies) project.
+
+### Interactive Easter Eggs (`CatCompanion.tsx`)
+
+In addition to full-screen canvas overlays, the terminal features an interactive pet that can be summoned via the `meow` command.
+
+- **Direct DOM Manipulation:** To maintain 60fps tracking of the user's cursor without lagging the terminal, the component completely bypasses React state (`useState`).
+- **Performance:** It uses a `requestAnimationFrame` loop with Linear Interpolation (Lerp) and directly mutates the DOM via refs (`cursorRef.current.style.transform` and `textContent`).
+- **Interactive States:** It detects inactivity to fall asleep, and uses `pointerdown` listeners to react to the user "petting" it.
 
 ---
 

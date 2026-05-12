@@ -48,9 +48,13 @@ export interface CommandExecutor {
 }
 
 /**
+ * Core terminal business logic.
  * Composes useTerminalHistory, useTheme, and useActiveEffect into a single
- * interface and wires up the command executor. Each sub-hook owns its
- * own state slice; this hook owns only the dispatch logic.
+ * interface and wires up the command executor. 
+ * 
+ * It acts as a Command Dispatcher: parsing incoming strings and routing
+ * them to the appropriate `CommandHandler` in the registry, injecting a
+ * unified `CommandContext` to keep the handlers modular and decoupled.
  */
 export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions): CommandExecutor {
   const {
@@ -74,7 +78,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     if (trimmedCmd === "") return;
 
     setHistory((prev) => {
-      const next = [...prev, { type: "command", content: cmd }];
+      const next: OutputLine[] = [...prev, { type: "command", content: cmd }];
       return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
     });
     setCommandHistory((prev) => [...prev, cmd]);

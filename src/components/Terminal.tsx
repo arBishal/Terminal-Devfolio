@@ -1,13 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense, lazy } from "react";
 import { CommandLine } from "@/components/CommandLine";
 import { TerminalOutput } from "@/components/TerminalOutput";
 import { TerminalHeader } from "@/components/TerminalHeader";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { FirefliesCanvas } from "@/components/FirefliesCanvas";
-import { MatrixRainCanvas } from "@/components/MatrixRainCanvas";
-import { StarfieldCanvas } from "@/components/StarfieldCanvas";
-import { CatCompanion } from "@/components/CatCompanion";
 import { useCommandExecutor } from "@/hooks/useCommandExecutor";
+
+// Lazy-load heavy visual effects so they don't block the initial terminal render
+const FirefliesCanvas = lazy(() => import("@/components/FirefliesCanvas").then(m => ({ default: m.FirefliesCanvas })));
+const MatrixRainCanvas = lazy(() => import("@/components/MatrixRainCanvas").then(m => ({ default: m.MatrixRainCanvas })));
+const StarfieldCanvas = lazy(() => import("@/components/StarfieldCanvas").then(m => ({ default: m.StarfieldCanvas })));
+const CatCompanion = lazy(() => import("@/components/CatCompanion").then(m => ({ default: m.CatCompanion })));
 
 /**
  * Root component — owns layout, theme attribute, scroll-to-latest logic,
@@ -98,10 +100,12 @@ export function Terminal() {
 
   return (
     <div data-theme={currentThemeName} className="bg-t-bg text-t-text font-mono min-h-dvh">
-      {currentEffect === "fireflies" && <FirefliesCanvas onComplete={clearEffect} />}
-      {currentEffect === "matrix-rain" && <MatrixRainCanvas onComplete={clearEffect} />}
-      {currentEffect === "starfield" && <StarfieldCanvas onComplete={clearEffect} />}
-      {isMeowActive && <CatCompanion />}
+      <Suspense fallback={null}>
+        {currentEffect === "fireflies" && <FirefliesCanvas onComplete={clearEffect} />}
+        {currentEffect === "matrix-rain" && <MatrixRainCanvas onComplete={clearEffect} />}
+        {currentEffect === "starfield" && <StarfieldCanvas onComplete={clearEffect} />}
+        {isMeowActive && <CatCompanion />}
+      </Suspense>
       <div className="h-dvh flex flex-col">
         <TerminalHeader onClose={() => setIsClosed(true)} />
         <WelcomeScreen

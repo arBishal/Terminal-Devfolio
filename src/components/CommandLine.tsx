@@ -10,7 +10,13 @@ interface CommandLineProps {
   onFocusChange: (focused: boolean) => void;
 }
 
-
+/**
+ * Renders the command input prompt, handles keyboard/touch events for history navigation 
+ * and autocomplete, and dispatches the execution event.
+ * 
+ * Logic for autocomplete and history navigation is decoupled into 
+ * `useAutocomplete` and `useHistoryNavigation` hooks.
+ */
 export function CommandLine({
   onExecute,
   commandHistory,
@@ -46,6 +52,11 @@ export function CommandLine({
     if (input.trim()) {
       onExecute(input);
       setInput("");
+      
+      // Dismiss the software keyboard on mobile devices to reveal the command output
+      if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+        inputRef.current?.blur();
+      }
     }
   };
 
