@@ -78,7 +78,7 @@ export function useCommandExecutor({ setIsCommandsOpen }: CommandExecutorOptions
     if (trimmedCmd === "") return;
 
     setHistory((prev) => {
-      const next = [...prev, { type: "command", content: cmd }];
+      const next: OutputLine[] = [...prev, { type: "command", content: cmd }];
       return next.length > MAX_HISTORY ? next.slice(-MAX_HISTORY) : next;
     });
     setCommandHistory((prev) => [...prev, cmd]);

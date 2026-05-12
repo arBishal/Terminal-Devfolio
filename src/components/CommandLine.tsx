@@ -52,6 +52,11 @@ export function CommandLine({
     if (input.trim()) {
       onExecute(input);
       setInput("");
+      
+      // Dismiss the software keyboard on mobile devices to reveal the command output
+      if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+        inputRef.current?.blur();
+      }
     }
   };
 

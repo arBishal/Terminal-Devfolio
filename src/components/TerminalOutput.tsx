@@ -13,7 +13,7 @@ export function TerminalOutput({ history }: TerminalOutputProps) {
   if (history.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-live="polite" aria-relevant="additions text">
       {history.map((line, index) => (
         <div key={index}>
           {line.type === "command" && (
